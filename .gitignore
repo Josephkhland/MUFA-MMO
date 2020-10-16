@@ -1,0 +1,6 @@
+__pycache__
+discordbot_env
+data
+.env
+.DS_Store
+.vs
