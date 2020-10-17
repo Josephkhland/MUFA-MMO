@@ -18,7 +18,6 @@ class WorldNode(Document):
     #    self.dungeon_id= dungeon_id,
 
 
-
 new_guild_hub = {
     "_id" : '=guild_id',
     "coordinates" : (0,0),
@@ -27,15 +26,37 @@ new_guild_hub = {
     #MUST DESIGN OTHER VARIABLES
 }
 
-new_descendant_parameters = {
-    "will_bonus" : 0,
-    "vitality_bonus" : 0,
-    "agility_bonus" : 0,
-    "strength_bonus" : 0,
-    "starting_karma" : 0,
-    "mutations" : [],
-    "character_name" : 'name', #Name is selected upon birth of a new descendant option.
-}
+class descendant(EmbeddedDocument):
+    will_bonus = IntField()
+    vitality_bonus = IntField()
+    agility_bonus = IntField()
+    strength_bonus = IntField()
+    starting_karma = IntField()
+    mutations = ListField(IntField(), default = [])
+    character_name = StringField(max_length = 20)
+
+class character(EmbeddedDocument):
+    willpower = IntField()
+    vitality = IntField()
+    agility = IntField()
+    strength = IntField()
+    money_carried = IntField()
+    inventory = ListField(IntField(), default =[])
+    precision_base = IntField()
+    evasion_base = IntField()
+    coordinates = ListField(IntField())
+    instance_stack = ListField(ReferenceField(Instance), default =[])
+    
+    #Three values:  armor_equiped[0] -> helmet,
+    #               armor_equiped[1] -> chestpiece,
+    #               armor_equiped[2] -> boots
+    armor_equiped = ListField(IntField()) 
+    
+    #Four values:   weapons_equiped[0] -> slash,   
+    #               weapons_equiped[1] -> pierce ,
+    #               weapons_equiped[2] -> crash ,
+    #               weapons_equiped[3] ->ranged
+    weapons_equiped = ListField(IntField()) 
 
 new_player = {
     "_id" : '=user_id',
@@ -43,7 +64,9 @@ new_player = {
     "money_stored" : 0,
     "items_stored" : [],
     "descendant_options" : [new_descendant_parameters],
-    "guild" : '=guild_id where Home is based'
+    "guild" : '=guild_id where Home is based',
+    "actions_left " : 30,
+    "last_action_date" : 0 #SOME DATE OBJECT
 }
 
 new_character = {
