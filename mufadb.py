@@ -76,10 +76,6 @@ class GuildPrivacy(Enum):
     ALLIANCE = 1                    #The Guild can only be entered by Players with a Base within an Allied Guild.
     OPEN = 2                        #The Guild is open and anyone that finds it can enter. 
 
-class BattlerType(Enum):
-    PLAYER  = 0
-    MONSTER = 1
-
 #Classes definitions
 
 class WorldNode(Document):
@@ -167,14 +163,13 @@ class Item(Document):
     dismantling_difficulty = IntField()                      #Reduces Chance of acquiring each of its resources upon dismantling.
 
 class Monster(Document):
+    name = StringField()
     monster_type = IntField()
     character_stats = EmbeddedDocumentField(character)
     spawn_date =  DateTimeField()
-    behaviour = IntField()
+    behaviour = IntField() #Monster Behaviours will be figured out later.
 
-class Battler(Document):
-    name = StringField(max_length = 30)
-    battler_type = IntField()                   # Player = 0 , Monster = 1
+class Battler(Document):                
     player_entity = ReferenceField(Player)
     monster_entity = ReferenceField(Monster)
 
