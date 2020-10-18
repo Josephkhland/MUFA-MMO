@@ -11,16 +11,24 @@ for i in range(15):
     array_zero_15.append(0)
 
 #Classes Declarations
+class Battler(Document): meta = {'allow_inheritance': True}
+class Monster(Battler): pass
+class Player(Battler): pass
+
 class WorldNode(Document): pass
 class GuildHub(Document): pass
-class Player(Document): pass
+
 class ArmorSet(Document): pass
 class Spell(Document): pass
-class Item(Document): pass
-class Monster(Document): pass
-class Battler(Document): pass
-class Instance(Document): pass
+class Item(Document): meta = {'allow_inheritance': True}
+class Armor(Item): pass
+class Weapon(Item): pass
+class Spellbook(Item): pass
+class Artifact(Item): pass
+
+class Instance(Document): meta = {'allow_inheritance': True}
 class Dungeon(Document): pass
+
 class activeCondition(EmbeddedDocument): pass
 class descendant(EmbeddedDocument): pass
 class character(EmbeddedDocument): pass
@@ -28,7 +36,7 @@ class character(EmbeddedDocument): pass
 #ENUMERATIONS
 class Conditions(Enum):
     POISONED = 0                    #Take 1 Damage per Action, until condition expires.
-    BURNING = 1                     #Take 5 Damage per Action, until condition expires. If FROZEN appliesm, both conditions are removed
+    BURNING = 1                     #Take 5 Damage per Action, until condition expires. If FROZEN applies, both conditions are removed
     FROZEN = 2                      #Can't move. If attacked with Crash weapon you take double damage but the condition is removed. If BURNING applies both conditions are removed.
     PARALYZED = 3                   #Agility counts as 0 for combat calculations. 
     TERRIFIED = 4                   #Can't use Slash, Pierce or Crash Weapons.
@@ -89,8 +97,7 @@ class GuildHub(Document):
     privacy_setting = IntField(default = GuildPrivacy.CLOSED.value) 
     alliances = ListField(StringField(max_length = 20), default =[])  #List of Guild_ids that this guild is friendly with.
 
-class Player(Document):
-    name = StringField()
+class Player(Battler):
     characters_list = ListField(EmbeddedDocumentField(character), default = [])
     active_character = IntField()
     money_stored = IntField()
@@ -117,6 +124,7 @@ class Spell(Document):
     on_success_condition_duration = ListField(IntField(), default = array_zero_15)
     on_success_force_exhaustion_damage = IntField()              #Deals damage directly to someone's actions left. (PvP-Only)
     actions_required = IntField(default = 1)                     #The number of actions required to use this spell.
+    ingredients = ListField(ListField(IntField()), default = []) #List of Resources required in format List([resource_id, quantity])
 
 class Item(Document):
     name = StringField(max_length = 50)
@@ -132,55 +140,72 @@ class Item(Document):
     item_type = IntField()
     weight = IntField()
     
-    armor_set = ReferenceField(ArmorSet)
-    evasion_chance_reduction = IntField(default = -1)        #Armor Stat  | Decrease evasion by X%
-    physical_damage_reduction_f = IntField (default = -1)    #Armor Stat  | Flat damage reduction from Physical Sources
-    magic_damage_reduction_f = IntField(default = -1)        #Armor Stat  | Flat damage reduction from Magical Sources
-    physical_damage_reduction_p = IntField(default = -1)     #Armor Stat  | Percentage damage reduction from Physical Sources
-    Magic_damage_reduction_p = IntField(default = -1)        #Armor Stat  | Percentage damage reduction from Magical Sources
-    
-    precision_scale = IntField(default = -1)                 #Weapon Stat | For each point in agility this is added to the Precision%
-    damage_amp_scale = IntField(default = -1)                #Weapon Stat | For each point in strength this is added to damage_amplification%
-    damage_per_amp = IntField(default = -1)                  #Weapon Stat | Amount of Bonus Damage, for each time that the damage is amplified.
-    damage_base = IntField(default = -1)                     #Weapon Stat | Base damage that is dealt per Hit. 
-    
-    spells = ListField(ReferenceField(Spell), default = [])     #Spellbook   | Includes the available spells.   
-    
     #Special Stats: 
-    spell_resistance = IntField(default = 0)                 #When targeted by a spell, reduce the success chance of it's effect on you by X%
-    mental_effect_resistance = IntField(default = 0)         #When targeted by an effect that is tagged as Mental, you add this to your resistance.
-    physical_effect_resistance = IntField(default = 0)       #When targeted by an effect that is tagged as Physical, you add this to your resistance 
-    condition_resistances = ListField(IntField(), default = array_zero_15 )
-    forced_exhaustion_resistance = IntField(default = 0)
+    spell_resistance = IntField(default = 0)                                    #When targeted by a spell, reduce the success chance of it's effect on you by X%
+    mental_effect_resistance = IntField(default = 0)                            #When targeted by an effect that is tagged as Mental, you add this to your resistance.
+    physical_effect_resistance = IntField(default = 0)                          #When targeted by an effect that is tagged as Physical, you add this to your resistance 
+    condition_resistances = ListField(IntField(), default = array_zero_15 )     #When someone attempts to inflict a condition on you, use these to resist.
+    forced_exhaustion_resistance = IntField(default = 0)                        #When someone attempts to deal damage to your actions (Exhaustion Damage) use this to resist it.
     
-    on_hit_condition_inflict_chance = ListField(IntField(), default = array_zero_15)
-    on_hit_condition_duration = ListField(IntField(), default = array_zero_15)
-    on_hit_force_exhaustion_damage = IntField()              #Deals damage directly to someone's actions left. (PvP-Only)
-    drop_chance = IntField(default = 0)                      #Chance of dropping when a character wielding it is killed. 
+    #Looting
+    drop_chance = IntField(default = 0)                                         #Chance of dropping when a character wielding it is killed. 
     
     #Crafting Stats:
     crafting_recipe = ListField(ListField(IntField()), default = [])            #List of Resources required in format List([resource_id, quantity])
-    dismantling_difficulty = IntField()                      #Reduces Chance of acquiring each of its resources upon dismantling.
+    dismantling_difficulty = IntField()                                         #Reduces Chance of acquiring each of its resources upon dismantling.
+    
+    meta = {'allow_inheritance': True}
+    
+class Armor(Item):
+    armor_set = ReferenceField(ArmorSet)
+    evasion_chance_reduction = IntField(default = 0)        #Armor Stat  | Decrease evasion by X%
+    physical_damage_reduction_f = IntField (default = 0)    #Armor Stat  | Flat damage reduction from Physical Sources
+    magic_damage_reduction_f = IntField(default = 0)        #Armor Stat  | Flat damage reduction from Magical Sources
+    physical_damage_reduction_p = IntField(default = 0)     #Armor Stat  | Percentage damage reduction from Physical Sources
+    Magic_damage_reduction_p = IntField(default = 0)        #Armor Stat  | Percentage damage reduction from Magical Sources
+    
+    thorn_condition_inflict_chance = ListField(IntField(), default = array_zero_15)     #Upon getting hit, chance of inflicting conditions to attacker.
+    thorn_condition_duration = ListField(IntField(), default = array_zero_15)           #Upon getting hit, duration of any condition that gets inflicted to attacker from Thorn effect.
+    thorn_force_exhaustion_damage = IntField()                                          #Upon getting hit, deals damage to the Attacker's Actions (Exhaustion Damage) (vs Players only)
 
-class Monster(Document):
-    name = StringField()
-    monster_type = IntField()
+class Weapon(Item):
+    precision_scale = IntField(default = 0)                 #Weapon Stat | For each point in agility this is added to the Precision%
+    damage_amp_scale = IntField(default = 0)                #Weapon Stat | For each point in strength this is added to damage_amplification%
+    damage_per_amp = IntField(default = 0)                  #Weapon Stat | Amount of Bonus Damage, for each time that the damage is amplified.
+    damage_base = IntField(default = 0)                     #Weapon Stat | Base damage that is dealt per Hit. 
+    
+    on_hit_condition_inflict_chance = ListField(IntField(), default = array_zero_15)    #Upon hitting someone. chance of inflicting conditions to attacker.
+    on_hit_condition_duration = ListField(IntField(), default = array_zero_15)          #Upon hitting someone, duration of any inflicting conditions.
+    on_hit_force_exhaustion_damage = IntField()                                         #Deals damage directly to someone's actions left. (vs Player only)
+
+class Spellbook(Item):
+    spells = ListField(ReferenceField(Spell), default = [])     #Spellbook   | Includes the available spells.   
+
+class Artifact(Item):
+    study_requirement = IntField()
+    consumable = BooleanField()
+    spell = ReferenceField(Spell)
+    key_item = BooleanField()
+
+class Monster(Battler):
     character_stats = EmbeddedDocumentField(character)
-    spawn_date =  DateTimeField()
-    behaviour = IntField() #Monster Behaviours will be figured out later.
+    behaviour = IntField() #Monster Behaviors will be figured out later.
 
-class Battler(Document):                
-    player_entity = ReferenceField(Player)
-    monster_entity = ReferenceField(Monster)
+class Battler(Document):
+    name = StringField()
+    creation_date = DateTimeField()
 
 class Instance(Document):
-    instance_type = IntField()
     participants_side_A = ListField(ReferenceField(Battler), default = [])
     participants_side_B = ListField(ReferenceField(Battler), default = [])
     actions_log = ListField(StringField(), default = [])
+    meta = {'allow_inheritance': True}
 
-#class Dungeon(Document):
-    #To Be created
+class Dungeon(Document):
+    name = StringField()
+    treasure = ListField(Item)
+    gold_loot = IntField()
+    floors = IntField()
 
 class activeCondition(EmbeddedDocument):
     name = StringField()
