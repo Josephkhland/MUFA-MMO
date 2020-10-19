@@ -2,7 +2,7 @@
 import os
 import random
 import mufa_constants as mconst
-import mufadb
+import mufadb as db
 import mufa_world
 import battle
 import datetime
@@ -65,16 +65,16 @@ async def args(ctx, *args):
 async def register(ctx):
     guildID = ctx.message.guild.id
     user = ctx.author
-    character.register(user.id, user.name, guildID, datetime.datetime.now())
+    character.register(str(user.id), user.name, str(guildID), datetime.datetime.now())
     
 @bot.command()
 async def spawn(ctx, *args):
-    userID = ctx.author.id
+    userID = str(ctx.author.id)
     if not character.checkRegistration(userID):
         return print ("Not registered Player")
     if len(args) <= 0:
         return print("Less Arguments than expected")
-    player_entity = db.Player.get(id = userID)
+    player_entity = db.Battler.objects.get(identification = userID)
     guildID = player_entity.guild_id
     if int(args[0]) <0 or int(args[0]) > len(player_entity.characters_list):
         return print("Invalid Argument")
@@ -84,10 +84,10 @@ async def spawn(ctx, *args):
     await ctx.send("Done")
     
 @bot.command()
-async def show(ctx, user: discord.User):
-    userID = user.id
-    if user == None :
-        userID = ctx.author.id
-    await ctx.send(character.show(userID))
+async def show(ctx, user: discord.User = None):
+    userID = str(ctx.author.id)
+    if user != None :
+        userID = str(user.id)
+    await ctx.channel.send(embed=character.show(userID))
 bot.run(TOKEN)
 

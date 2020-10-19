@@ -86,6 +86,50 @@ class GuildPrivacy(Enum):
 
 #Classes definitions
 
+class activeCondition(EmbeddedDocument):
+    name = StringField()
+    date_added = DateTimeField()
+    duration = IntField()
+    
+
+class descendant(EmbeddedDocument):
+    will_bonus = IntField( default =10)
+    vitality_bonus = IntField( default =10)
+    agility_bonus = IntField( default =10)
+    strength_bonus = IntField(default =10)
+    starting_karma = IntField( default =0)
+    character_name = StringField(max_length = 20)
+
+class character(EmbeddedDocument):
+    willpower = IntField(default = 10)
+    vitality = IntField(default = 10)
+    agility = IntField(default = 10)
+    strength = IntField(default = 10)
+    money_carried = IntField( default = 0)
+    inventory = ListField(ReferenceField(Item), default =[])
+    precision_base = IntField( default = 10)
+    evasion_base = IntField( default = 10)
+    coordinates = ListField(IntField())
+    instance_stack = ListField(ReferenceField(Instance), default =[])
+    conditions = ListField(EmbeddedDocumentField(activeCondition), default =[])
+    
+    #Three values:  armor_equiped[0] -> helmet,
+    #               armor_equiped[1] -> chestpiece,
+    #               armor_equiped[2] -> boots
+    armor_equiped = ListField(ReferenceField(Item), default=[]) 
+    
+    #Four values:   weapons_equiped[0] -> slash,   
+    #               weapons_equiped[1] -> pierce ,
+    #               weapons_equiped[2] -> crash ,
+    #               weapons_equiped[3] ->ranged
+    weapons_equiped = ListField(ReferenceField(Item), default=[])
+    max_actions = IntField(default = 100)
+    actions_left = IntField(default = 100)
+    karma = IntField(default = 0)
+    current_health = IntField( default = 100)
+    current_sanity = IntField( default = 100)
+    name = StringField()
+
 class WorldNode(Document):
     coordinates = ListField(IntField())
     guild_id = StringField(max_length = 20)
@@ -98,6 +142,13 @@ class GuildHub(Document):
     privacy_setting = IntField(default = GuildPrivacy.CLOSED.value) 
     alliances = ListField(StringField(max_length = 20), default =[])  #List of Guild_ids that this guild is friendly with.
 
+class Battler(Document):
+    identification = StringField(primary_key = True)
+    name = StringField()
+    creation_date = DateTimeField()
+    
+    meta = {'allow_inheritance': True}
+
 class Player(Battler):
     characters_list = ListField(EmbeddedDocumentField(character), default = [])
     active_character = IntField(default =0)
@@ -107,8 +158,22 @@ class Player(Battler):
     guild_id = StringField(max_length = 20)
     last_action_date = DateTimeField()
     
-    def getCharacter():
-        return characters_list[active_character]
+    def getCharacter(self):
+        return self.characters_list[self.active_character]
+
+class Monster(Battler):
+    character_stats = EmbeddedDocumentField(character)
+    behaviour = IntField() #Monster Behaviors will be figured out later.
+    
+    def getCharacter(self):
+        return self.character_stats
+
+class GhostBattler(Battler):
+    previous_id = StringField()
+    
+    def getCharacter(self):
+        return None
+
 
 class ArmorSet(Document):
     name = StringField(max_length = 20)
@@ -191,26 +256,6 @@ class Artifact(Item):
     spell = ReferenceField(Spell)
     key_item = BooleanField()
 
-class Monster(Battler):
-    character_stats = EmbeddedDocumentField(character)
-    behaviour = IntField() #Monster Behaviors will be figured out later.
-    
-    def getCharacter():
-        return character_stats
-
-class GhostBattler(Battler):
-    previous_id = StringField()
-    
-    def getCharacter():
-        return None
-
-class Battler(Document):
-    identification = StringField(primary_key = True)
-    name = StringField()
-    creation_date = DateTimeField()
-    
-    meta = {'allow_inheritance': True}
-
 class Instance(Document):
     participants_side_A = ListField(ReferenceField(Battler), default = [])
     participants_side_B = ListField(ReferenceField(Battler), default = [])
@@ -223,45 +268,4 @@ class Dungeon(Document):
     gold_loot = IntField()
     floors = IntField()
 
-class activeCondition(EmbeddedDocument):
-    name = StringField()
-    date_added = DateTimeField()
-    duration = IntField()
 
-class descendant(EmbeddedDocument):
-    will_bonus = IntField( default =10)
-    vitality_bonus = IntField( default =10)
-    agility_bonus = IntField( default =10)
-    strength_bonus = IntField(default =10)
-    starting_karma = IntField( default =0)
-    character_name = StringField(max_length = 20)
-    
-class character(EmbeddedDocument):
-    willpower = IntField(default = 10)
-    vitality = IntField(default = 10)
-    agility = IntField(default = 10)
-    strength = IntField(default = 10)
-    money_carried = IntField( default = 0)
-    inventory = ListField(ReferenceField(Item), default =[])
-    precision_base = IntField( default = 10)
-    evasion_base = IntField( default = 10)
-    coordinates = ListField(IntField())
-    instance_stack = ListField(ReferenceField(Instance), default =[])
-    conditions = ListField(EmbeddedDocumentField(activeCondition), default =[])
-    
-    #Three values:  armor_equiped[0] -> helmet,
-    #               armor_equiped[1] -> chestpiece,
-    #               armor_equiped[2] -> boots
-    armor_equiped = ListField(ReferenceField(Item), default=[]) 
-    
-    #Four values:   weapons_equiped[0] -> slash,   
-    #               weapons_equiped[1] -> pierce ,
-    #               weapons_equiped[2] -> crash ,
-    #               weapons_equiped[3] ->ranged
-    weapons_equiped = ListField(ReferenceField(Item), default=[])
-    max_actions = IntField(default = 100)
-    actions_left = IntField(default = 100)
-    karma = IntField(default = 0)
-    current_health = IntField( default = 100)
-    current_sanity = IntField( default = 100)
-    name = StringField()

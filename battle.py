@@ -2,6 +2,7 @@ import random
 import mufadb as db 
 import mongoengine
 import mufadisplay as puru
+import discord
 
 def create():
     stored_var = db.Instance().save()

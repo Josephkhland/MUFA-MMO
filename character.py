@@ -1,4 +1,5 @@
 import datetime
+import discord
 import mufadb as db 
 
 def register(playerID,username, guild_id, date):
@@ -10,10 +11,10 @@ def register(playerID,username, guild_id, date):
               creation_date = datetime.datetime.now()
              ).save()
    
-def spawn(playerID, name, descendant: db.descendant, guildID):
+def spawn(playerID, name, descendant, guildID):
     if descendant.character_name == None :
         descendant.character_name = name
-    coords = db.GuildHub.get(id = guildID).coordinates
+    coords = db.GuildHub.objects.get(guild_id = guildID).coordinates
     n_char = db.character(name = descendant.character_name,
                  willpower = descendant.will_bonus,
                  vitality = descendant.vitality_bonus,
@@ -23,21 +24,24 @@ def spawn(playerID, name, descendant: db.descendant, guildID):
                  current_health = descendant.vitality_bonus*10,
                  current_sanity = descendant.will_bonus*10,
                  coordinates = coords)
-    db.Player.objects(id = playerID).update(push__characters_list = n_char)
-    curP = db.Player.get(id = playerID)
-    db.Player.objects(id = playerID).update(set__active_character =  len(curp.characters_list))
-    db.Player.objects(id = playerID).update(set__descendant_options = [db.descendant()])
+    db.Battler.objects(identification = playerID).update(push__characters_list = n_char)
+    curp = db.Battler.objects.get(identification = playerID)
+    db.Battler.objects(identification = playerID).update(set__active_character =  len(curp.characters_list)-1)
+    db.Battler.objects(identification= playerID).update(set__descendant_options = [db.descendant()])
 
 def checkRegistration(playerID):
-    if db.Player.get(id = playerID) == None:
+    print(db.Battler.objects.get(identification = playerID))
+    if db.Battler.objects.get(identification= playerID) == None:
         return False
     else :
         return True
     
 def show(playerID):
-    pObject = db.Player.get(id = playerID)
+    pObject = db.Battler.objects.get(identification= playerID)
     if pObject == None:
         return "User not found"
+    charac = pObject.getCharacter()
+    print(charac)
     embed = discord.Embed(
         title = pObject.name + " Profile",
         description = "Powered by Josephkhland",
@@ -47,16 +51,19 @@ def show(playerID):
     embed.add_field(name="Guild", value=pObject.guild_id, inline=False)
     embed.add_field(name="Stored Money", value=pObject.money_stored, inline=False)
     embed.add_field(name="Last Time Active", value=pObject.last_action_date, inline=False)
-    embed.add_field(name="Active Character", value=pObject.getCharacter().name, inline=False)
+    embed.add_field(name="Active Character", value=charac.name, inline=False)
     
-    playable_characters = "`"
-    unavailable_characters = "`"
+    playable_characters = "Names: "
+    unavailable_characters = "Names: "
     for c in pObject.characters_list:
+        flag_c = False
         for con in c.conditions:
             if con.name == "PETRIFIED" or con.name == "DEAD":
-                unavailable_characters += c.name +"` "
-            else: 
-                playable_characters += c.name
+                unavailable_characters += "`"+c.name +"` "
+                flag_c = True
+                break
+        if flag_c == False:    
+            playable_characters += "`"+c.name +"` "
     embed.add_field(name="Available Characters", value=playable_characters, inline = False)
     embed.add_field(name="Unavailable Characters", value=unavailable_characters, inline= False)
     embed.add_field(name="Date Joined", value= pObject.creation_date, inline = False)
