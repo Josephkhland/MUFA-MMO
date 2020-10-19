@@ -4,6 +4,7 @@ import random
 import mufa_constants as mconst
 import mufadb
 import mufa_world
+import battle
 from dotenv import load_dotenv
 from pathlib import Path  # Python 3.6+ only
 env_path = Path('.') / '.env'
@@ -45,6 +46,12 @@ async def test(ctx):
         
     msg_to_send += "```"
     await ctx.send(msg_to_send)
+
+@bot.command()
+async def test2(ctx):
+    battle.create()
+    await ctx.send("Done")
+
 
 bot.run(TOKEN)
 

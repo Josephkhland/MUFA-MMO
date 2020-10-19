@@ -104,7 +104,10 @@ class Player(Battler):
     items_stored = ListField(ReferenceField(Item))
     descendant_options = ListField(EmbeddedDocumentField(descendant), default = [])
     guild_id = StringField(max_length = 20)
-    last_action_date = DateTimeField()    
+    last_action_date = DateTimeField()
+    
+    def getCharacter():
+        return characters_list[active_character]
 
 class ArmorSet(Document):
     name = StringField(max_length = 20)
@@ -190,6 +193,9 @@ class Artifact(Item):
 class Monster(Battler):
     character_stats = EmbeddedDocumentField(character)
     behaviour = IntField() #Monster Behaviors will be figured out later.
+    
+    def getCharacter():
+        return character_stats
 
 class Battler(Document):
     name = StringField()
