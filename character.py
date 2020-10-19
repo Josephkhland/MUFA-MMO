@@ -50,7 +50,7 @@ def show(playerID):
     embed.set_footer(text="Profile("+playerID+") powered by Josephkhland")
     embed.add_field(name="Guild", value=pObject.guild_id, inline=False)
     embed.add_field(name="Stored Money", value=pObject.money_stored, inline=False)
-    embed.add_field(name="Last Time Active", value=pObject.last_action_date, inline=False)
+    embed.add_field(name="Last Time Active", value=pObject.last_action_date.ctime(), inline=False)
     embed.add_field(name="Active Character", value=charac.name, inline=False)
     
     playable_characters = "Names: "
@@ -66,5 +66,5 @@ def show(playerID):
             playable_characters += "`"+c.name +"` "
     embed.add_field(name="Available Characters", value=playable_characters, inline = False)
     embed.add_field(name="Unavailable Characters", value=unavailable_characters, inline= False)
-    embed.add_field(name="Date Joined", value= pObject.creation_date, inline = False)
+    embed.add_field(name="Date Joined", value= pObject.creation_date.ctime(), inline = False)
     return embed
