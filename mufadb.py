@@ -93,15 +93,16 @@ class WorldNode(Document):
     resources_id = ListField(IntField(), default = [])
 
 class GuildHub(Document):
+    guild_id = StringField(primary_key = True)
     coordinates = ListField(IntField())
     privacy_setting = IntField(default = GuildPrivacy.CLOSED.value) 
     alliances = ListField(StringField(max_length = 20), default =[])  #List of Guild_ids that this guild is friendly with.
 
 class Player(Battler):
     characters_list = ListField(EmbeddedDocumentField(character), default = [])
-    active_character = IntField()
-    money_stored = IntField()
-    items_stored = ListField(ReferenceField(Item))
+    active_character = IntField(default =0)
+    money_stored = IntField(default =0)
+    items_stored = ListField(ReferenceField(Item), default =[])
     descendant_options = ListField(EmbeddedDocumentField(descendant), default = [])
     guild_id = StringField(max_length = 20)
     last_action_date = DateTimeField()
@@ -197,9 +198,18 @@ class Monster(Battler):
     def getCharacter():
         return character_stats
 
+class GhostBattler(Battler):
+    previous_id = StringField()
+    
+    def getCharacter():
+        return None
+
 class Battler(Document):
+    identification = StringField(primary_key = True)
     name = StringField()
     creation_date = DateTimeField()
+    
+    meta = {'allow_inheritance': True}
 
 class Instance(Document):
     participants_side_A = ListField(ReferenceField(Battler), default = [])
@@ -219,40 +229,39 @@ class activeCondition(EmbeddedDocument):
     duration = IntField()
 
 class descendant(EmbeddedDocument):
-    will_bonus = IntField()
-    vitality_bonus = IntField()
-    agility_bonus = IntField()
-    strength_bonus = IntField()
-    starting_karma = IntField()
-    mutations = ListField(IntField(), default = [])
+    will_bonus = IntField( default =10)
+    vitality_bonus = IntField( default =10)
+    agility_bonus = IntField( default =10)
+    strength_bonus = IntField(default =10)
+    starting_karma = IntField( default =0)
     character_name = StringField(max_length = 20)
     
 class character(EmbeddedDocument):
-    willpower = IntField()
-    vitality = IntField()
-    agility = IntField()
-    strength = IntField()
-    money_carried = IntField()
+    willpower = IntField(default = 10)
+    vitality = IntField(default = 10)
+    agility = IntField(default = 10)
+    strength = IntField(default = 10)
+    money_carried = IntField( default = 0)
     inventory = ListField(ReferenceField(Item), default =[])
-    precision_base = IntField()
-    evasion_base = IntField()
+    precision_base = IntField( default = 10)
+    evasion_base = IntField( default = 10)
     coordinates = ListField(IntField())
     instance_stack = ListField(ReferenceField(Instance), default =[])
-    conditions = ListField(EmbeddedDocumentField(activeCondition))
+    conditions = ListField(EmbeddedDocumentField(activeCondition), default =[])
     
     #Three values:  armor_equiped[0] -> helmet,
     #               armor_equiped[1] -> chestpiece,
     #               armor_equiped[2] -> boots
-    armor_equiped = ListField(ReferenceField(Item)) 
+    armor_equiped = ListField(ReferenceField(Item), default=[]) 
     
     #Four values:   weapons_equiped[0] -> slash,   
     #               weapons_equiped[1] -> pierce ,
     #               weapons_equiped[2] -> crash ,
     #               weapons_equiped[3] ->ranged
-    weapons_equiped = ListField(ReferenceField(Item))
-    actions_left = IntField()
-    karma = IntField()
-    age = IntField()
-    current_health = IntField()
-    current_sanity = IntField()
+    weapons_equiped = ListField(ReferenceField(Item), default=[])
+    max_actions = IntField(default = 100)
+    actions_left = IntField(default = 100)
+    karma = IntField(default = 0)
+    current_health = IntField( default = 100)
+    current_sanity = IntField( default = 100)
     name = StringField()
