@@ -12,17 +12,41 @@ from dotenv import load_dotenv
 from pathlib import Path  # Python 3.6+ only
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
-
-# 1
+import sys, traceback
 from discord.ext import commands
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 # 2
-bot = commands.Bot(command_prefix='!')
+#bot = commands.Bot(command_prefix='!')
+def get_prefix(bot, message):
+    """A callable Prefix for our bot. This could be edited to allow per server prefixes."""
+    prefixes = ['!', 'm!']
+
+    # Check to see if we are outside of a guild. e.g DM's etc.
+    if not message.guild:
+        # Only allow ! to be used in DMs
+        return '!'
+
+    # If we are in a guild, we allow for the user to mention us or use any of the prefixes in our list.
+    return commands.when_mentioned_or(*prefixes)(bot, message)
+# Below cogs represents our folder our cogs are in. Following is the file name. So 'meme.py' in cogs, would be cogs.meme
+# Think of it like a dot path import
+initial_extensions = ['Players.navigation']
+
+bot = commands.Bot(command_prefix=get_prefix)
+
+# Here we load our extensions listed above in [initial_extensions].
+if __name__ == '__main__':
+    for extension in initial_extensions:
+        bot.load_extension(extension)
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user.name} has connected to Discord!')
+    print(f'\n\nLogged in as: {bot.user.name} - {bot.user.id}\nVersion: {discord.__version__}\n')
+    
+     # Changes our bots Playing Status. type=1(streaming) for a standard game you could remove type and url.
+    await bot.change_presence(activity=discord.Game(name="Multiple Unidentified Futures Anthem"))
+    print(f'Successfully logged in and booted...!')
     
 @bot.event
 async def on_guild_join(guild):
@@ -89,5 +113,5 @@ async def show(ctx, user: discord.User = None):
     if user != None :
         userID = str(user.id)
     await ctx.channel.send(embed=character.show(userID))
-bot.run(TOKEN)
+bot.run(TOKEN, bot=True, reconnect=True)
 
