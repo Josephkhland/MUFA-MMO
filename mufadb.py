@@ -111,7 +111,7 @@ class character(EmbeddedDocument):
     evasion_base = IntField( default = 10)
     coordinates = ListField(IntField())
     instance_stack = ListField(ReferenceField(Instance), default =[])
-    conditions = ListField(EmbeddedDocumentField(activeCondition), default =[])
+    conditions = EmbeddedDocumentListField(activeCondition, default =[])
     
     #Three values:  armor_equiped[0] -> helmet,
     #               armor_equiped[1] -> chestpiece,
@@ -150,16 +150,20 @@ class Battler(Document):
     meta = {'allow_inheritance': True}
 
 class Player(Battler):
-    characters_list = ListField(EmbeddedDocumentField(character), default = [])
+    characters_list = EmbeddedDocumentListField(character, default = [])
     active_character = IntField(default =0)
     money_stored = IntField(default =0)
     items_stored = ListField(ReferenceField(Item), default =[])
-    descendant_options = ListField(EmbeddedDocumentField(descendant), default = [])
+    descendant_options = EmbeddedDocumentListField(descendant, default = [])
     guild_id = StringField(max_length = 20)
     last_action_date = DateTimeField()
     
     def getCharacter(self):
         return self.characters_list[self.active_character]
+    
+    def updateCurrentCharacter(self, c):
+        self.characters_list[self.active_character] = c
+        return
 
 class Monster(Battler):
     character_stats = EmbeddedDocumentField(character)

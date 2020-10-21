@@ -1,4 +1,5 @@
 import mufadb as db
+import mufa_constants as mconst
 import discord
 from discord.ext import commands
 
@@ -11,13 +12,54 @@ class Navigation(commands.Cog):
     async def teleport(self, ctx):
         """This command can be used by a registered player in order to teleport to the coordinates of a Server."""
         temp_o = db.Battler.objects.get(identification = str(ctx.author.id))
-        print(temp_o.getCharacter().coordinates)
-        await ctx.send(f'Character coordinates at:{temp_o.getCharacter().coordinates}')
+        pCharac = temp_o.getCharacter()
+        prepare_message = "Previous Coordinates ("+str(pCharac.coordinates[0])+","+str(pCharac.coordinates[1])+")"
+        pCharac.coordinates = db.GuildHub.objects.get(guild_id = str(ctx.guild.id)).coordinates
+        temp_o.updateCurrentCharacter(pCharac)
+        temp_o.save()
+        prepare_message = "```Teleported to ("+str(pCharac.coordinates[0])+","+str(pCharac.coordinates[1])+") "+ ctx.guild.name+ ".\n" + prepare_message 
+        finalize_message = prepare_message + "```"
+        await ctx.send(finalize_message)
 
-    @commands.command(name='coolbot')
-    async def cool_bot(self, ctx):
-        """Is the bot cool?"""
-        await ctx.send('This bot is cool. :)')
+    @commands.command(name='move', aliases=['travel'])
+    async def move(self, ctx, *args):
+        """Move to a different world node"""
+        temp_o = db.Battler.objects.get(identification = str(ctx.author.id))
+        pCharac = temp_o.getCharacter()
+        c_coords = pCharac.coordinates
+        prepare_message = "```"
+        if args[0].lower() == "s" or args[0].lower() == "south" or args[0].lower() == "y-":
+            if c_coords[1] == 0:
+                prepare_message += "The path to the South is blocked.\n"
+            else:
+                prepare_message +="Travelled South.\n"
+                c_coords[1] -= 1
+        elif args[0].lower() == "e" or args[0].lower() == "east" or args[0].lower() == "x+":
+            if c_coords[0] == mconst.world_size.get('x') -1:
+                prepare_message +="The path to the East is blocked\n"
+            else:
+                prepare_message +="Travelled East.\n"
+                c_coords[0] += 1
+        elif args[0].lower() == "n" or args[0].lower() == "north" or args[0].lower() == "y+":
+            if c_coords[1] == mconst.world_size.get('y') -1:
+                prepare_message +="The path to the North is blocked.\n"
+            else:
+                prepare_message +="Travelled North.\n"
+                c_coords[1] += 1
+        elif args[0].lower() == "w" or args[0].lower() == "west" or args[0].lower() == "x-":
+            if c_coords[0] == 0:
+                prepare_message +="The path to the West is blocked\n"
+            else:
+                prepare_message +="Travelled West.\n"
+                c_coords[0] -= 1
+        else:
+            prepare_message +="["+args[0]+"] is not a valid direction.\n"
+        pCharac.coordinates = c_coords
+        temp_o.updateCurrentCharacter(pCharac)
+        temp_o.save()
+        prepare_message+= "Your current coordinates:  [ x : "+str(c_coords[0])+ "]" + "[ y : "+str(c_coords[1])+ "]"
+        finalize_message = prepare_message + "```"
+        await ctx.send(finalize_message)
 
     @commands.command(name='top_role', aliases=['toprole'])
     @commands.guild_only()
