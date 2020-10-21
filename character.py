@@ -3,7 +3,7 @@ import discord
 import mufadb as db 
 
 def register(playerID,username, guild_id, date):
-    db.Player(identification = playerID,
+    db.Player(battler_id = playerID,
               name = username, 
               guild_id = guild_id,
               last_action_date= datetime.datetime.now(),
@@ -15,6 +15,7 @@ def spawn(playerID, name, descendant, guildID):
     if descendant.character_name == None :
         descendant.character_name = name
     coords = db.GuildHub.objects.get(guild_id = guildID).coordinates
+    temp = db.WorldNode.objects.get(coordinates = coords)
     n_char = db.character(name = descendant.character_name,
                  willpower = descendant.will_bonus,
                  vitality = descendant.vitality_bonus,
@@ -23,21 +24,22 @@ def spawn(playerID, name, descendant, guildID):
                  karma = descendant.starting_karma,
                  current_health = descendant.vitality_bonus*10,
                  current_sanity = descendant.will_bonus*10,
+                 instance_stack = [temp.to_dbref()],
                  coordinates = coords)
-    db.Battler.objects(identification = playerID).update(push__characters_list = n_char)
-    curp = db.Battler.objects.get(identification = playerID)
-    db.Battler.objects(identification = playerID).update(set__active_character =  len(curp.characters_list)-1)
-    db.Battler.objects(identification= playerID).update(set__descendant_options = [db.descendant()])
+    db.Battler.objects(battler_id = playerID).update(push__characters_list = n_char)
+    curp = db.Battler.objects.get(battler_id = playerID)
+    db.Battler.objects(battler_id = playerID).update(set__active_character =  len(curp.characters_list)-1)
+    db.Battler.objects(battler_id= playerID).update(set__descendant_options = [db.descendant()])
 
 def checkRegistration(playerID):
-    print(db.Battler.objects.get(identification = playerID))
-    if db.Battler.objects.get(identification= playerID) == None:
+    print(db.Battler.objects.get(battler_id = playerID))
+    if db.Battler.objects.get(battler_id= playerID) == None:
         return False
     else :
         return True
     
 def show(playerID):
-    pObject = db.Battler.objects.get(identification= playerID)
+    pObject = db.Battler.objects.get(battler_id= playerID)
     if pObject == None:
         return "User not found"
     charac = pObject.getCharacter()

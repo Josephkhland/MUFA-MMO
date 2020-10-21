@@ -15,7 +15,8 @@ class Battler(Document): meta = {'allow_inheritance': True}
 class Monster(Battler): pass
 class Player(Battler): pass
 
-class WorldNode(Document): pass
+class Node(Document): meta = {'allow_inheritance': True}
+class WorldNode(Node): pass
 class GuildHub(Document): pass
 
 class ArmorSet(Document): pass
@@ -26,8 +27,8 @@ class Weapon(Item): pass
 class Spellbook(Item): pass
 class Artifact(Item): pass
 
-class Instance(Document): meta = {'allow_inheritance': True}
-class Dungeon(Document): pass
+class Battle(Node): pass
+class Dungeon(Node): pass
 
 class activeCondition(EmbeddedDocument): pass
 class descendant(EmbeddedDocument): pass
@@ -110,7 +111,7 @@ class character(EmbeddedDocument):
     precision_base = IntField( default = 10)
     evasion_base = IntField( default = 10)
     coordinates = ListField(IntField())
-    instance_stack = ListField(ReferenceField(Instance), default =[])
+    instance_stack = ListField(ReferenceField(Node), default =[])
     conditions = EmbeddedDocumentListField(activeCondition, default =[])
     
     #Three values:  armor_equiped[0] -> helmet,
@@ -129,12 +130,37 @@ class character(EmbeddedDocument):
     current_health = IntField( default = 100)
     current_sanity = IntField( default = 100)
     name = StringField()
+    
+    def getInstance(self):
+        return self.instance_stack[-1]
+    
+    def replaceInstance(self,new_instance):
+        self.instance_stack[-1] = new_instance
+        return 0
+    
+    def enterInstance(self, new_instance):
+        self.instance_stack.append(new_instance)
+        return 0
+    
+    def exitInstance(self):
+        return self.instance_stack.pop()
 
-class WorldNode(Document):
+class Node(Document):
+    node_id = StringField(primary_key = True)
+    sub_nodes_ids = ListField(StringField())
+    north_exit = StringField()
+    east_exit =  StringField()
+    south_exit = StringField()
+    west_exit = StringField()
+    members = ListField(ReferenceField(Battler))
+    entrance_message = StringField()
+    resources = ListField(IntField())
+    meta = {'allow_inheritance': True}
+    
+
+class WorldNode(Node):
     coordinates = ListField(IntField())
     guild_id = StringField(max_length = 20)
-    dungeon_id = StringField(max_length = 20)
-    resources_id = ListField(IntField(), default = [])
 
 class GuildHub(Document):
     guild_id = StringField(primary_key = True)
@@ -143,11 +169,16 @@ class GuildHub(Document):
     alliances = ListField(StringField(max_length = 20), default =[])  #List of Guild_ids that this guild is friendly with.
 
 class Battler(Document):
-    identification = StringField(primary_key = True)
+    battler_id = StringField(primary_key = True)
     name = StringField()
+    faction = IntField()
     creation_date = DateTimeField()
     
     meta = {'allow_inheritance': True}
+    def getCharacter(self):
+        pass
+    def updateCurrentCharacter(self, c):
+        pass
 
 class Player(Battler):
     characters_list = EmbeddedDocumentListField(character, default = [])
@@ -164,6 +195,8 @@ class Player(Battler):
     def updateCurrentCharacter(self, c):
         self.characters_list[self.active_character] = c
         return
+    def getCurrentNode(self):
+        return self.getCharacter().getInstance()
 
 class Monster(Battler):
     character_stats = EmbeddedDocumentField(character)
@@ -260,16 +293,20 @@ class Artifact(Item):
     spell = ReferenceField(Spell)
     key_item = BooleanField()
 
-class Instance(Document):
-    participants_side_A = ListField(ReferenceField(Battler), default = [])
-    participants_side_B = ListField(ReferenceField(Battler), default = [])
-    actions_log = ListField(StringField(), default = [])
+class battlelog(EmbeddedDocument):
+    battler = ReferenceField(Battler)
+    action_description = StringField()
+    timestamp = DateTimeField()
+
+class Battle(Node):
+    loot = ListField(ReferenceField(Item))
+    money_loot = IntField()
+    actions_log = EmbeddedDocumentListField(battlelog)
     meta = {'allow_inheritance': True}
 
-class Dungeon(Document):
+class Dungeon(Node):
     name = StringField()
     treasure = ListField(Item)
     gold_loot = IntField()
-    floors = IntField()
 
 

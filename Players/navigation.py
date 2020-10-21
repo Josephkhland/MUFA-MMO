@@ -15,6 +15,8 @@ class Navigation(commands.Cog):
         pCharac = temp_o.getCharacter()
         prepare_message = "Previous Coordinates ("+str(pCharac.coordinates[0])+","+str(pCharac.coordinates[1])+")"
         pCharac.coordinates = db.GuildHub.objects.get(guild_id = str(ctx.guild.id)).coordinates
+        world_pos = db.WorldNode.objects.get(coordinates = pCharac.coordinates)
+        pCharac.instance_stack = [world_pos.to_dbref()]
         temp_o.updateCurrentCharacter(pCharac)
         temp_o.save()
         prepare_message = "```Teleported to ("+str(pCharac.coordinates[0])+","+str(pCharac.coordinates[1])+") "+ ctx.guild.name+ ".\n" + prepare_message 
@@ -23,7 +25,7 @@ class Navigation(commands.Cog):
 
     @commands.command(name='move', aliases=['travel'])
     async def move(self, ctx, *args):
-        """Move to a different world node"""
+        """Use this command to travel East, West, North or South in the World Map."""
         temp_o = db.Battler.objects.get(identification = str(ctx.author.id))
         pCharac = temp_o.getCharacter()
         c_coords = pCharac.coordinates

@@ -31,7 +31,8 @@ def get_prefix(bot, message):
     return commands.when_mentioned_or(*prefixes)(bot, message)
 # Below cogs represents our folder our cogs are in. Following is the file name. So 'meme.py' in cogs, would be cogs.meme
 # Think of it like a dot path import
-initial_extensions = ['Players.navigation']
+initial_extensions = ['Players.navigation',
+                      'Moderator.initialization']
 
 bot = commands.Bot(command_prefix=get_prefix)
 
@@ -63,29 +64,6 @@ async def ping(ctx):
     await ctx.send('Pong! {0}'.format(round(bot.latency, 1)))
 
 @bot.command()
-async def test(ctx):
-    n_list = mufa_world.visualize()
-    msg_to_send = "```"
-    for i in range(5):
-        for j in range(5):
-            msg_to_send += str(n_list[i*5 + j])
-        msg_to_send += "\n"
-    msg_to_send += "```"
-    await ctx.send(msg_to_send)
-
-@bot.command()
-async def test2(ctx):
-    battle.create()
-    await ctx.send("Done")
-
-@bot.command()
-async def args(ctx, *args):
-    messages = ""
-    for a in args:
-        messages += a + "|"
-    await ctx.send(messages)
-
-@bot.command()
 async def register(ctx):
     guildID = ctx.message.guild.id
     user = ctx.author
@@ -98,7 +76,7 @@ async def spawn(ctx, *args):
         return print ("Not registered Player")
     if len(args) <= 0:
         return print("Less Arguments than expected")
-    player_entity = db.Battler.objects.get(identification = userID)
+    player_entity = db.Battler.objects.get(battler_id = userID)
     guildID = player_entity.guild_id
     if int(args[0]) <0 or int(args[0]) > len(player_entity.characters_list):
         return print("Invalid Argument")
