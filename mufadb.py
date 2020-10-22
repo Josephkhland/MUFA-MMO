@@ -199,6 +199,11 @@ class character(EmbeddedDocument):
         self.exp_to_next_level = nextLevelEXP(self.level)
         self.checkLevel()
 
+###22/10/2020 23:14 -> This is the part which I started before going to sleep.
+class nodeMember(EmbeddedDocument):
+    member = ReferenceField(Battler)
+    faction_tag = IntField(Default = 0)
+
 class Node(Document):
     node_id = StringField(primary_key = True)
     sub_nodes_ids = ListField(StringField())
@@ -206,7 +211,7 @@ class Node(Document):
     east_exit =  StringField()
     south_exit = StringField()
     west_exit = StringField()
-    members = ListField(ReferenceField(Battler))
+    members = ListField(EmbeddedDocumentField(nodeMember))
     entrance_message = StringField()
     resources = ListField(IntField())
     meta = {'allow_inheritance': True}
