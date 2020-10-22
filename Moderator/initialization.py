@@ -40,13 +40,22 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
         user = str(ctx.author.id)
         if user in moderators_list:
             n_list = mufa_world.visualize()
-            msg_to_send = "```"
-            for i in range(5):
-                for j in range(5):
-                    msg_to_send += str(n_list[i*5 + j])
+            msg_to_send = "```\n"
+            for i in range(mconst.world_size.get('x')):
+                for j in range(mconst.world_size.get('y')):
+                    msg_to_send += str(n_list[i*5 + j]) +" "
                 msg_to_send += "\n"
             msg_to_send += "```"
             await ctx.send(msg_to_send)
+    
+    @commands.command(name='initialize')
+    async def initialize(self, ctx):
+         user = str(ctx.author.id)
+         guild = ctx.guild
+         if user in moderators_list:
+            mufa_world.generate()
+            mufa_world.insert_guild(str(guild.id))
+            mufa_world.createNullObject()
     
 def setup(bot):
     bot.add_cog(Initialization(bot))

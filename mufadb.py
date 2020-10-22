@@ -1,4 +1,5 @@
 import pymongo
+import math
 from enum import Enum
 from mongoengine import *
 
@@ -9,6 +10,13 @@ connect('MUFAdatabase', host='localhost', port=27017)
 array_zero_15 = []
 for i in range(15):
     array_zero_15.append(0)
+
+#Useful function:
+def nextLevelEXP(level):
+    exponent = 1.5
+    baseXP = 100
+    return math.floor(baseXP*(level**exponent))
+
 
 #Classes Declarations
 class Battler(Document): meta = {'allow_inheritance': True}
@@ -87,6 +95,35 @@ class GuildPrivacy(Enum):
 
 #Classes definitions
 
+class Item(Document):
+    name = StringField(max_length = 50)
+    #item_types:    0 -> helmet (armor), 
+    #               1 -> chestpiece (armor),
+    #               2 -> boots (armor),
+    #               3 -> slash (weapon)
+    #               4 -> pierce (weapon)
+    #               5 -> crash (weapon)
+    #               6 -> ranged (weapon)
+    #               7 -> artifact (use from inventory)
+    #               8 -> spellbook
+    item_type = IntField( default = 9)
+    
+    #Special Stats: 
+    spell_resistance = IntField(default = 0)                                    #When targeted by a spell, reduce the success chance of it's effect on you by X%
+    mental_effect_resistance = IntField(default = 0)                            #When targeted by an effect that is tagged as Mental, you add this to your resistance.
+    physical_effect_resistance = IntField(default = 0)                          #When targeted by an effect that is tagged as Physical, you add this to your resistance 
+    condition_resistances = ListField(IntField(), default = array_zero_15 )     #When someone attempts to inflict a condition on you, use these to resist.
+    forced_exhaustion_resistance = IntField(default = 0)                        #When someone attempts to deal damage to your actions (Exhaustion Damage) use this to resist it.
+    
+    #Looting
+    drop_chance = IntField(default = 0)                                         #Chance of dropping when a character wielding it is killed. 
+    
+    #Crafting Stats:
+    crafting_recipe = ListField(ListField(IntField()), default = [])            #List of Resources required in format List([resource_id, quantity])
+    dismantling_difficulty = IntField()                                         #Reduces Chance of acquiring each of its resources upon dismantling.
+    
+    meta = {'allow_inheritance': True}
+
 class activeCondition(EmbeddedDocument):
     name = StringField()
     date_added = DateTimeField()
@@ -94,18 +131,18 @@ class activeCondition(EmbeddedDocument):
     
 
 class descendant(EmbeddedDocument):
-    will_bonus = IntField( default =10)
-    vitality_bonus = IntField( default =10)
-    agility_bonus = IntField( default =10)
-    strength_bonus = IntField(default =10)
+    will_bonus = IntField( default =1)
+    vitality_bonus = IntField( default =1)
+    agility_bonus = IntField( default =1)
+    strength_bonus = IntField(default =1)
     starting_karma = IntField( default =0)
     character_name = StringField(max_length = 20)
 
 class character(EmbeddedDocument):
-    willpower = IntField(default = 10)
-    vitality = IntField(default = 10)
-    agility = IntField(default = 10)
-    strength = IntField(default = 10)
+    willpower = IntField(default = 1)
+    vitality = IntField(default = 1)
+    agility = IntField(default = 1)
+    strength = IntField(default = 1)
     money_carried = IntField( default = 0)
     inventory = ListField(ReferenceField(Item), default =[])
     precision_base = IntField( default = 10)
@@ -118,6 +155,8 @@ class character(EmbeddedDocument):
     #               armor_equiped[1] -> chestpiece,
     #               armor_equiped[2] -> boots
     armor_equiped = ListField(ReferenceField(Item), default=[]) 
+    armor_set = ReferenceField(ArmorSet)
+    set_bonus_specification= IntField(default =0) # 0 for none, 1 for half, 2 for full
     
     #Four values:   weapons_equiped[0] -> slash,   
     #               weapons_equiped[1] -> pierce ,
@@ -127,8 +166,13 @@ class character(EmbeddedDocument):
     max_actions = IntField(default = 100)
     actions_left = IntField(default = 100)
     karma = IntField(default = 0)
-    current_health = IntField( default = 100)
-    current_sanity = IntField( default = 100)
+    current_health = IntField( default = 10)
+    current_sanity = IntField( default = 10)
+    level = IntField(default = 1)
+    experience = IntField(default =0)
+    exp_to_next_level = IntField(default = nextLevelEXP(1))
+    unused_points = IntField(default =0)
+    imageURL = StringField(default = "https://cdn.discordapp.com/embed/avatars/0.png")
     name = StringField()
     
     def getInstance(self):
@@ -144,6 +188,16 @@ class character(EmbeddedDocument):
     
     def exitInstance(self):
         return self.instance_stack.pop()
+    
+    def checkLevel(self):
+        if self.experience > self.exp_to_next_level:
+            self.levelUp()
+    
+    def levelUp(self):
+        self.level+= 1
+        self.experience = self.experience % self.exp_to_next_level
+        self.exp_to_next_level = nextLevelEXP(self.level)
+        self.checkLevel()
 
 class Node(Document):
     node_id = StringField(primary_key = True)
@@ -189,6 +243,7 @@ class Player(Battler):
     guild_id = StringField(max_length = 20)
     last_action_date = DateTimeField()
     
+    
     def getCharacter(self):
         return self.characters_list[self.active_character]
     
@@ -232,35 +287,7 @@ class Spell(Document):
     actions_required = IntField(default = 1)                     #The number of actions required to use this spell.
     ingredients = ListField(ListField(IntField()), default = []) #List of Resources required in format List([resource_id, quantity])
 
-class Item(Document):
-    name = StringField(max_length = 50)
-    #item_types:    0 -> helmet (armor), 
-    #               1 -> chestpiece (armor),
-    #               2 -> boots (armor),
-    #               3 -> slash (weapon)
-    #               4 -> pierce (weapon)
-    #               5 -> crash (weapon)
-    #               6 -> ranged (weapon)
-    #               7 -> artifact (use from inventory)
-    #               8 -> spellbook
-    item_type = IntField()
-    weight = IntField()
-    
-    #Special Stats: 
-    spell_resistance = IntField(default = 0)                                    #When targeted by a spell, reduce the success chance of it's effect on you by X%
-    mental_effect_resistance = IntField(default = 0)                            #When targeted by an effect that is tagged as Mental, you add this to your resistance.
-    physical_effect_resistance = IntField(default = 0)                          #When targeted by an effect that is tagged as Physical, you add this to your resistance 
-    condition_resistances = ListField(IntField(), default = array_zero_15 )     #When someone attempts to inflict a condition on you, use these to resist.
-    forced_exhaustion_resistance = IntField(default = 0)                        #When someone attempts to deal damage to your actions (Exhaustion Damage) use this to resist it.
-    
-    #Looting
-    drop_chance = IntField(default = 0)                                         #Chance of dropping when a character wielding it is killed. 
-    
-    #Crafting Stats:
-    crafting_recipe = ListField(ListField(IntField()), default = [])            #List of Resources required in format List([resource_id, quantity])
-    dismantling_difficulty = IntField()                                         #Reduces Chance of acquiring each of its resources upon dismantling.
-    
-    meta = {'allow_inheritance': True}
+
     
 class Armor(Item):
     armor_set = ReferenceField(ArmorSet)

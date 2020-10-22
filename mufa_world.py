@@ -8,7 +8,10 @@ import time
 def generate():
     for i in range(mconst.world_size.get('x')):
         for j in range(mconst.world_size.get('y')):
-            db.WorldNode(coordinates = [i,j]).save()
+            x_zeroed = str(i)
+            y_zeroed = str(j)
+            id_to_give = "WN_X" + x_zeroed.zfill(4) +"_Y" + y_zeroed.zfill(4) 
+            db.WorldNode(node_id = id_to_give, coordinates = [i,j]).save()
     
     for i in range(mconst.world_size.get('x')):
         for j in range(mconst.world_size.get('y')):
@@ -57,13 +60,13 @@ def remove_guild(guild_to_remove : str):
 
 def visualize():
     list_of_nodes = []
-    for node in db.WorldNode.objects():
-        if node.guild_id != None : list_of_nodes.append(1)
+    for node_o in db.WorldNode.objects():
+        if node_o.guild_id != None : list_of_nodes.append(1)
         else : list_of_nodes.append(0)
     return list_of_nodes
     
 def node_enter(node_id, battler_id):
-    this_node = db.Node.objects.get(id = node_id)
+    this_node = db.Node.objects.get(node_id = node_id)
     battler = db.Battler.objects.get(battler_id = battler_id)
     pCharac = battler.getCharacter()
     this_node.members.append(battler.to_dbref())
@@ -77,11 +80,11 @@ def node_enter(node_id, battler_id):
     battler.updateCurrentCharacter(pCharac)
     battler.save()
 
-def node_exit(node_id, battler_id):
-    this_node = db.Node.objects.get(id = node_id)
+def node_exit(battler_id):
+    # = db.Node.objects.get(id = node_id)
     battler = db.Battler.objects.get(battler_id = battler_id)
     pCharac = battler.getCharacter()
-    pCharac.exitInstance()
+    this_node =pCharac.exitInstance()
     try:
         this_node.members.remove(battler.to_dbref())
         this_node.save()
@@ -91,5 +94,19 @@ def node_exit(node_id, battler_id):
     battler.save()
 
 def travel_to_node(node_id, battler_id):
-    node_exit(node_id, battler_id)
+    node_exit(battler_id)
     node_enter(node_id, battler_id)
+
+def getGuildNode(guild_id):
+    return db.WorldNode.objects.get(guild_id = guild_id).node_id
+
+def get_battler_coordinates(battler_id):
+    battler = db.Battler.objects.get(battler_id = battler_id)
+    pCharac = battler.getCharacter()
+    try: 
+        return pCharac.coordinates
+    except:
+        return None
+
+def createNullObject():
+    db.Item(name = "null_object").save()

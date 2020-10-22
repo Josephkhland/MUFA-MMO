@@ -16,6 +16,7 @@ def spawn(playerID, name, descendant, guildID):
         descendant.character_name = name
     coords = db.GuildHub.objects.get(guild_id = guildID).coordinates
     temp = db.WorldNode.objects.get(coordinates = coords)
+    null_obj = db.Item.objects.get(name = "null_object").to_dbref()
     n_char = db.character(name = descendant.character_name,
                  willpower = descendant.will_bonus,
                  vitality = descendant.vitality_bonus,
@@ -24,6 +25,8 @@ def spawn(playerID, name, descendant, guildID):
                  karma = descendant.starting_karma,
                  current_health = descendant.vitality_bonus*10,
                  current_sanity = descendant.will_bonus*10,
+                 armor_equiped = [null_obj,null_obj,null_obj],
+                 weapons_equiped = [null_obj,null_obj,null_obj,null_obj],
                  instance_stack = [temp.to_dbref()],
                  coordinates = coords)
     db.Battler.objects(battler_id = playerID).update(push__characters_list = n_char)
@@ -37,23 +40,77 @@ def checkRegistration(playerID):
         return False
     else :
         return True
+        
+def getHaltingConditions(battler_id):
+    battler = db.Battler.objects.get(battler_id = battler_id)
+    pCharac = battler.getCharacter()
+    disabling_conditions = []
+    for con in pCharac.conditions:
+        if con.name == "PETRIFIED" or con.name == "DEAD" or con.name == "ASLEEP":
+            disabling_conditions.append(con.name)
+    return disabling_conditions
+
+def speculate_condition(mcondition):
+    if (condition.duration < 0):
+        #The Condition is permament - Won't be removed until it is cured
+        return condition.duration
+    else:
+        end_time = condition.date_added + timedelta(hours =condition.duration)
+        if (datetime.now() >= end_time):
+            return 0
+        else:
+            return (datetime.now() - end_time).total_seconds()
+
+def solve_battler_conditions(battler_id):
+    battler = db.Battler.objects.get(battler_id = battler_id)
+    pCharac = battler.getCharacter()
+    output_message = []
+    to_remove = []
+    for con in pCharac.conditions:
+        if (speculate_condition(con)< 0):
+           output_message.append(con.name + " won't be removed over time.")
+        elif (speculate_condition(con) == 0):
+            output_message.append(con.name + " has been removed.")
+            to_remove.append(con)
+        else:
+            tminute = divmod(speculate_condition(con),60)
+            output_message.append(con.name + " will be removed in " + tminute[0] + "minutes and " +tminute[1] + "seconds.")
+    for i in to_remove:
+        pCharac.conditions.remove(i)
+    return output_message
+
+def playabilityCheck(ctx, battler_id):
+    try:
+        tempList = getHaltingConditions(battler_id)
+    except:
+        ctx.send("No Playable Character available in this Account")
+    if len(tempList) == 0:
+        return True
+    else:
+        ctx.send("Your current character is not playable due to the following condition(s): " + str(tempList) + ".\n")
+        return False
     
 def show(playerID):
     pObject = db.Battler.objects.get(battler_id= playerID)
+    has_character = True
     if pObject == None:
         return "User not found"
-    charac = pObject.getCharacter()
-    print(charac)
+    try:
+        charac = pObject.getCharacter()
+    except:
+        has_character = False
     embed = discord.Embed(
         title = pObject.name + " Profile",
         description = "Powered by Josephkhland",
         colour = discord.Colour.red()
     )
-    embed.set_footer(text="Profile("+playerID+") powered by Josephkhland")
+    embed.set_footer(text="Profile("+playerID+") - Last Active : " + pObject.last_action_date.ctime())
     embed.add_field(name="Guild", value=pObject.guild_id, inline=False)
     embed.add_field(name="Stored Money", value=pObject.money_stored, inline=False)
-    embed.add_field(name="Last Time Active", value=pObject.last_action_date.ctime(), inline=False)
-    embed.add_field(name="Active Character", value=charac.name, inline=False)
+    #embed.add_field(name="Last Time Active", value=pObject.last_action_date.ctime(), inline=False)
+    if has_character:
+        value_to_display = "`" + charac.name + "`"
+        embed.add_field(name="Active Character", value=value_to_display, inline=False)
     
     playable_characters = "Names: "
     unavailable_characters = "Names: "

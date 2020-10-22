@@ -32,6 +32,7 @@ def get_prefix(bot, message):
 # Below cogs represents our folder our cogs are in. Following is the file name. So 'meme.py' in cogs, would be cogs.meme
 # Think of it like a dot path import
 initial_extensions = ['Players.navigation',
+                      'Players.profile',
                       'Moderator.initialization']
 
 bot = commands.Bot(command_prefix=get_prefix)
@@ -84,12 +85,6 @@ async def spawn(ctx, *args):
         return "Name must be provided"
     character.spawn(userID, args[1], player_entity.descendant_options[int(args[0])], guildID)
     await ctx.send("Done")
-    
-@bot.command()
-async def show(ctx, user: discord.User = None):
-    userID = str(ctx.author.id)
-    if user != None :
-        userID = str(user.id)
-    await ctx.channel.send(embed=character.show(userID))
+
 bot.run(TOKEN, bot=True, reconnect=True)
 
