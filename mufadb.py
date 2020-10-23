@@ -230,7 +230,7 @@ class Node(Document):
     south_exit = StringField()
     west_exit = StringField()
     members = ListField(ReferenceField(Battler))
-    entrance_message = StringField()
+    entrance_message = StringField(default = "No description Available.")
     resources = ListField(IntField())
     meta = {'allow_inheritance': True}
     
@@ -243,6 +243,7 @@ class GuildHub(Document):
     guild_id = StringField(primary_key = True)
     name = StringField()
     coordinates = ListField(IntField())
+    invites_channel = StringField()
     privacy_setting = IntField(default = GuildPrivacy.CLOSED.value) 
     alliances = ListField(StringField(max_length = 20), default =[])  #List of Guild_ids that this guild is friendly with.
 

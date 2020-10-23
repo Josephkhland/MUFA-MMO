@@ -18,7 +18,7 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
         user = str(ctx.author.id)
         if user in moderators_list:
             print ("New Guild joined")
-            mufa_world.insert_guild(str(guild.id))
+            mufa_world.insert_guild(str(guild.id),guild.name)
     
     @commands.command(name='force_guild_remove')
     @commands.guild_only()
@@ -54,7 +54,7 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
          guild = ctx.guild
          if user in moderators_list:
             mufa_world.generate()
-            mufa_world.insert_guild(str(guild.id))
+            mufa_world.insert_guild(str(guild.id),guild.name)
             mufa_world.createNullObject()
     
 def setup(bot):

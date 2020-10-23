@@ -83,29 +83,30 @@ def node_information(node):
     embed.add_field(name = "Sub instances", value = sub_nodes_string, inline = False)
     
     #Creating the Field where the Guild Information is visible .
-    if node instanceof db.WorldNode:
+    if isinstance(node,db.WorldNode):
         if node.guild_id != None:
             guild = db.GuildHub.objects.get(guild_id = node.guild_id)
             if guild.privacy_setting == db.GuildPrivacy.CLOSED.value:
                 details = "The guild in this locations has its Privacy Setting set to CLOSED and can't be accessed."
             elif guild.privacy_setting == db.GuildPrivacy.OPEN.value:
-                details = guild.name +"("+guild.id+") use `!guild_discover` command to ask for an invitation."
+                details = "**"+guild.name +"** ("+guild.id+")\nUse `!guild_discover` command to ask for an invitation."
             else:
                 details = "ALLIANCES NOT IMPLEMENTED YET"
             embed.add_field(name = "Guild" , value = details, inline = False)
     
     #Creating Field for traveling directions
-    exits_string = None
+    exits_string = "->"
     if node.north_exit != None:
         exits_string += "`North` "
     if node.east_exit != None:
         exits_string += "`East` "
     if node.south_exit != None:
         exits_string += "`South` "
-    if node.west_ext != None:
+    if node.west_exit != None:
         exits_string += "`West` "
-    if exits_string != None:
-        embed.add_field(named = "Paths" , value = exits_string, inline = False)
+    if exits_string != "->":
+        embed.add_field(name = "Paths" , value = exits_string, inline = False)
+    return embed
     
 def node_enter(node_id, battler_id):
     this_node = db.Node.objects.get(node_id = node_id)
@@ -121,6 +122,7 @@ def node_enter(node_id, battler_id):
         pass
     battler.updateCurrentCharacter(pCharac)
     battler.save()
+    return node_information(this_node)
 
 def node_exit(battler_id):
     # = db.Node.objects.get(id = node_id)
@@ -137,7 +139,7 @@ def node_exit(battler_id):
 
 def travel_to_node(node_id, battler_id):
     node_exit(battler_id)
-    node_enter(node_id, battler_id)
+    return node_enter(node_id, battler_id)
 
 def getGuildNode(guild_id):
     return db.WorldNode.objects.get(guild_id = guild_id).node_id
