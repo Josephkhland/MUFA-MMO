@@ -8,8 +8,16 @@ def digits_panel(minvalue:int, maxvalue:int, size:int) -> str:
         m_v = " " + m_v
     return "`"+m_v+"/"+M_v+"`"
 
-def line(label: str, value:int):
-    return label +": `"+ str(value)+"`\n"
+def line(label: str, value:int, size:int):
+    val_str = str(value)
+    characters_occupy = len(label) + len(val_str)
+    num_of_space = size - characters_occupy
+    if num_of_space < 0 : num_of_space = 0
+    string_to_return = label +":"
+    for i in range(num_of_space):
+        string_to_return += ' '
+    string_to_return +="`"+ val_str+"`\n"
+    return string_to_return
 
 def null_item_display_help(item):
     if item.name == "null_object":

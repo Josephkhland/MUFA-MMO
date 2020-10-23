@@ -42,11 +42,14 @@ class Profile(commands.Cog):
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         pCharac = battler.getCharacter()
+        status = ":bust_in_silhouette: "
+        if pCharac.is_dead:
+            status = ":skull: "
         healthString = mdisplay.digits_panel(pCharac.current_health,pCharac.vitality*10, 8) + ":heart: "
         sanityString = mdisplay.digits_panel(pCharac.current_sanity,pCharac.willpower*10, 8) + ":brain: "
         actionsString = mdisplay.digits_panel(pCharac.actions_left, pCharac.max_actions, 8) + ":zap: "
         embed = discord.Embed(
-            title = pCharac.name + " ("+playerID+")",
+            title = status+pCharac.name + " ("+playerID+")",
             description = healthString + sanityString + actionsString,
             colour = discord.Colour.red(),
             timestamp = datetime.datetime.now()
@@ -54,17 +57,17 @@ class Profile(commands.Cog):
         embed.set_footer(text="Instance: "+str(pCharac.getInstance().node_id) +" ("+str(pCharac.coordinates[0])+","+str(pCharac.coordinates[1])+")")
         
         #Setting up the field for the Primary Stats.
-        primaryStatsString = mdisplay.line("Willpower",pCharac.willpower)
-        primaryStatsString += mdisplay.line("Vitality",pCharac.vitality)
-        primaryStatsString += mdisplay.line("Agility",pCharac.agility)
-        primaryStatsString += mdisplay.line("Strength",pCharac.strength)
-        primaryStatsString += mdisplay.line("Karma",pCharac.karma)
+        primaryStatsString = mdisplay.line("Willpower",pCharac.willpower,12)
+        primaryStatsString += mdisplay.line("Vitality",pCharac.vitality,12)
+        primaryStatsString += mdisplay.line("Agility",pCharac.agility,12)
+        primaryStatsString += mdisplay.line("Strength",pCharac.strength,12)
+        primaryStatsString += mdisplay.line("Karma",pCharac.karma,12)
         embed.add_field(name="Primary Stats", value=primaryStatsString, inline=True)
         
         #Setting up the field for the Progression Stats
-        progressionStatsString = mdisplay.line("Level", pCharac.level)
+        progressionStatsString = mdisplay.line("Level", pCharac.level,12)
         progressionStatsString += "Experience: "+ mdisplay.digits_panel(pCharac.experience, pCharac.exp_to_next_level,12) + "\n"
-        progressionStatsString += mdisplay.line("Unused Points", pCharac.unused_points)
+        progressionStatsString += mdisplay.line("Unused Points", pCharac.unused_points,12)
         embed.add_field(name="Progression", value=progressionStatsString, inline=True)
         
         #Setting up the field for the Armor
@@ -118,8 +121,46 @@ class Profile(commands.Cog):
     @commands.command(name='mycharacters')
     async def my_characters(self, ctx):
         """Shows an index of your characters"""
-        await ctx.send("COMMAND NOT READY")
-
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.get(battler_id = playerID)
+        embed = discord.Embed(
+            title = battler.name + " ("+playerID+")",
+            description = "Index of your characters. Use the indexes here when attempting to select another of your characters",
+            colour = discord.Colour.red(),
+            timestamp = datetime.datetime.now()
+        )
+        counter = 0
+        for chara in battler.characters_list:
+            disabling_conditions = [False,False,False]
+            this_value = "Conditions: "
+            for con in chara.conditions:
+                if con.name == 'DEAD':
+                    disabling_conditions[0] = True
+                if con.name == 'PETRIFIED':
+                    disabling_conditions[1] = True
+                if con.name == 'ASLEEP':
+                    disabling_conditions[2] = True
+                this_value += "`"+con.name+"` "
+            name_plugin = " "
+            if disabling_conditions[2]:
+                name_plugin += ":zzz: "
+            if disabling_conditions[1]:
+                name_plugin += ":rock: "
+            if disabling_conditions[0]:
+                name_plugin += ":skull: "
+            embed.add_field(name=str(counter) +": " + chara.name +name_plugin, value= this_value, inline = False)
+            counter += 1
+        await ctx.send(embed = embed)
+    
+    @commands.command(name='suicide')
+    async def suicide(self, ctx):
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.get(battler_id = playerID)
+        pCharac = battler.getCharacter()
+        message_to_send = pCharac.kill()
+        battler.updateCurrentCharacter(pCharac)
+        battler.save()
+        await ctx.send(message_to_send)
 
 # The setup fucntion below is neccesarry. Remember we give bot.add_cog() the name of the class in this case MembersCog.
 # When we load the cog, we use the name of the file.

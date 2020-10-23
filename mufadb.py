@@ -1,5 +1,6 @@
 import pymongo
 import math
+import datetime
 from enum import Enum
 from mongoengine import *
 
@@ -172,6 +173,7 @@ class character(EmbeddedDocument):
     experience = IntField(default =0)
     exp_to_next_level = IntField(default = nextLevelEXP(1))
     unused_points = IntField(default =0)
+    is_dead = BooleanField(default = False)
     imageURL = StringField(default = "https://cdn.discordapp.com/embed/avatars/0.png")
     name = StringField()
     
@@ -198,11 +200,27 @@ class character(EmbeddedDocument):
         self.experience = self.experience % self.exp_to_next_level
         self.exp_to_next_level = nextLevelEXP(self.level)
         self.checkLevel()
-
-###22/10/2020 23:14 -> This is the part which I started before going to sleep.
-class nodeMember(EmbeddedDocument):
-    member = ReferenceField(Battler)
-    faction_tag = IntField(Default = 0)
+    
+    def addCondition(self, condition):
+        for con in self.conditions:
+            if con.name == condition.name:
+                if con.duration == -1: return "**"+self.name + "** *is already* `" + con.name +"`"
+                if con.duration != -1 and con.duration < condition.duration:
+                    con.duration = condition.duration
+                con.date_added = condition.date_added
+                return "**"+self.name + "** *is now* `" + con.name +"`!"
+        self.conditions.append(condition)
+        return "**"+self.name + "** *is now* `" + condition.name +"`!"
+    
+    def kill(self):
+        self.current_health = 0
+        self.current_sanity = 0
+        self.actions_left = 0
+        self.is_dead = True
+        n_con =  activeCondition(name = 'DEAD',
+                 date_added = datetime.datetime.now(),
+                 duration = -1)
+        return self.addCondition(n_con)
 
 class Node(Document):
     node_id = StringField(primary_key = True)
@@ -211,7 +229,7 @@ class Node(Document):
     east_exit =  StringField()
     south_exit = StringField()
     west_exit = StringField()
-    members = ListField(EmbeddedDocumentField(nodeMember))
+    members = ListField(ReferenceField(Battler))
     entrance_message = StringField()
     resources = ListField(IntField())
     meta = {'allow_inheritance': True}
@@ -247,7 +265,7 @@ class Player(Battler):
     descendant_options = EmbeddedDocumentListField(descendant, default = [])
     guild_id = StringField(max_length = 20)
     last_action_date = DateTimeField()
-    
+    faction = IntField(default = 0)
     
     def getCharacter(self):
         return self.characters_list[self.active_character]
@@ -261,7 +279,7 @@ class Player(Battler):
 class Monster(Battler):
     character_stats = EmbeddedDocumentField(character)
     behaviour = IntField() #Monster Behaviors will be figured out later.
-    
+    faction = IntField(default = 1)
     def getCharacter(self):
         return self.character_stats
 
