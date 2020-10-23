@@ -241,6 +241,7 @@ class WorldNode(Node):
 
 class GuildHub(Document):
     guild_id = StringField(primary_key = True)
+    name = StringField()
     coordinates = ListField(IntField())
     privacy_setting = IntField(default = GuildPrivacy.CLOSED.value) 
     alliances = ListField(StringField(max_length = 20), default =[])  #List of Guild_ids that this guild is friendly with.

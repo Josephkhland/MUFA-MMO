@@ -13,7 +13,7 @@ class Navigation(commands.Cog):
     @commands.guild_only()
     async def teleport(self, ctx):
         """This command can be used by a registered player in order to teleport to the coordinates of a Server."""
-        if not character.playabilityCheck(ctx, str(ctx.author.id)):
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
             return
         p_coords = mw.get_battler_coordinates(str(ctx.author.id))
         n_id = mw.getGuildNode(str(ctx.guild.id))
@@ -28,7 +28,7 @@ class Navigation(commands.Cog):
     @commands.command(name='move', aliases=['travel'])
     async def move(self, ctx, *args):
         """Use this command to travel East, West, North or South in the World Map."""
-        if not character.playabilityCheck(ctx, str(ctx.author.id)):
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
             return
         temp_o = db.Battler.objects.get(battler_id = str(ctx.author.id))
         pCharac = temp_o.getCharacter()

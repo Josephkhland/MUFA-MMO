@@ -17,7 +17,7 @@ class Profile(commands.Cog):
         userID = str(ctx.author.id)
         if user != None :
             userID = str(user.id)
-        await ctx.channel.send(embed=character.show(userID))
+        await ctx.channel.send(embed=character.show(userID, self.bot))
 
     @commands.command(name='myimage')
     async def image(self,ctx, *args):
@@ -154,6 +154,7 @@ class Profile(commands.Cog):
     
     @commands.command(name='suicide')
     async def suicide(self, ctx):
+        """Kills your currently active character"""
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         pCharac = battler.getCharacter()
@@ -161,6 +162,33 @@ class Profile(commands.Cog):
         battler.updateCurrentCharacter(pCharac)
         battler.save()
         await ctx.send(message_to_send)
+    
+    @commands.command(name='switch_to_character')
+    async def switch_to_character(self, ctx, *args):
+        """Switch your Active character to the one you define with an index.
+           Use the index as seen in your character's list. ( !mycharacters ) 
+           Correct usage: !switch_to_character index
+        """
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.get(battler_id = playerID)
+        if int(args[0]) <0 or int(args[0]) >= len(battler.characters_list):
+            message_to_send = "Invalid argument"
+        else:
+            battler.active_character = int(args[0])
+            battler.save()
+            message_to_send = "Successfully changed active character to: **"+battler.getCharacter().name+"**."
+        await ctx.send(message_to_send)
+    
+    @commands.command(name='migrate')
+    @commands.guild_only()
+    async def migrate(self, ctx):
+        """Change the Serve/Guild you are registered to."""
+        playerID = str(ctx.author.id)
+        guildID = str(ctx.guild.id)
+        battler = db.Player.objects.get(battler_id = playerID)
+        battler.guild_id = guildID
+        battler.save()
+        await ctx.send("Migrated to **"+ ctx.guild.name + "** succesfully!")
 
 # The setup fucntion below is neccesarry. Remember we give bot.add_cog() the name of the class in this case MembersCog.
 # When we load the cog, we use the name of the file.

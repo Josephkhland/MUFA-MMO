@@ -3,6 +3,7 @@ import random
 import mongoengine
 import mufadb as db 
 import mufa_constants as mconst
+import discord
 import time 
 
 def generate():
@@ -45,13 +46,13 @@ def generate():
             temp.entrance_message = "("+str(i)+","+str(j)+")"
             temp.save()
     
-def insert_guild(guild_to_add : str):
+def insert_guild(guild_to_add : str, name_to_give):
     list_of_free_nodes = []
     for node in db.WorldNode.objects(guild_id=None):
         list_of_free_nodes.append(node.coordinates)
     node_to_fill = random.randint(0,len(list_of_free_nodes)-1)
     db.WorldNode.objects(coordinates=list_of_free_nodes[node_to_fill]).update(set__guild_id = guild_to_add)
-    db.GuildHub(guild_id= guild_to_add, coordinates = list_of_free_nodes[node_to_fill]).save()
+    db.GuildHub(guild_id= guild_to_add, name = name_to_give ,coordinates = list_of_free_nodes[node_to_fill]).save()
 
 def remove_guild(guild_to_remove : str):
     db.WorldNode.objects(guild_id = guild_to_remove).update(set__guild_id = None)
@@ -64,6 +65,47 @@ def visualize():
         if node_o.guild_id != None : list_of_nodes.append(1)
         else : list_of_nodes.append(0)
     return list_of_nodes
+    
+def node_information(node):
+    embed = discord.Embed(
+        title = "Instance Information",
+        description = "**Description:** "+ str(node.entrance_message),
+        colour = discord.Colour.green()
+    )
+    
+    #Creating the Field where the available subnodes are written.
+    if len(node.sub_nodes_ids) == 0:
+        sub_nodes_string = "None"
+    else:
+        sub_nodes_string = ""
+        for s_node in node.sub_nodes_ids:
+            sub_nodes_string += " `"+ str(s_node) + "` " 
+    embed.add_field(name = "Sub instances", value = sub_nodes_string, inline = False)
+    
+    #Creating the Field where the Guild Information is visible .
+    if node instanceof db.WorldNode:
+        if node.guild_id != None:
+            guild = db.GuildHub.objects.get(guild_id = node.guild_id)
+            if guild.privacy_setting == db.GuildPrivacy.CLOSED.value:
+                details = "The guild in this locations has its Privacy Setting set to CLOSED and can't be accessed."
+            elif guild.privacy_setting == db.GuildPrivacy.OPEN.value:
+                details = guild.name +"("+guild.id+") use `!guild_discover` command to ask for an invitation."
+            else:
+                details = "ALLIANCES NOT IMPLEMENTED YET"
+            embed.add_field(name = "Guild" , value = details, inline = False)
+    
+    #Creating Field for traveling directions
+    exits_string = None
+    if node.north_exit != None:
+        exits_string += "`North` "
+    if node.east_exit != None:
+        exits_string += "`East` "
+    if node.south_exit != None:
+        exits_string += "`South` "
+    if node.west_ext != None:
+        exits_string += "`West` "
+    if exits_string != None:
+        embed.add_field(named = "Paths" , value = exits_string, inline = False)
     
 def node_enter(node_id, battler_id):
     this_node = db.Node.objects.get(node_id = node_id)

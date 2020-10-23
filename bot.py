@@ -53,7 +53,7 @@ async def on_ready():
 @bot.event
 async def on_guild_join(guild):
     print ("New Guild joined")
-    mufa_world.insert_guild(str(guild.id))
+    mufa_world.insert_guild(str(guild.id), guild.name)
 
 @bot.event    
 async def on_guild_remove(guild):
@@ -85,6 +85,16 @@ async def spawn(ctx, *args):
         return "Name must be provided"
     character.spawn(userID, args[1], player_entity.descendant_options[int(args[0])], guildID)
     await ctx.send("Done")
+
+@bot.command()
+async def about(ctx):
+    embed = discord.Embed(
+        title = "About MUFA",
+        description = "Powered by Josephkhland",
+        colour = discord.Colour.blue()
+    )
+    embed.add_field(name="Help us Expand?", value = "[Invite MUFA](https://discord.com/api/oauth2/authorize?client_id=704732201199206420&permissions=8&scope=bot) to your Server", inline = False)
+    await ctx.send(embed = embed)
 
 bot.run(TOKEN, bot=True, reconnect=True)
 

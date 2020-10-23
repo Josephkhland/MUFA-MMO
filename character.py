@@ -79,19 +79,27 @@ def solve_battler_conditions(battler_id):
         pCharac.conditions.remove(i)
     return output_message
 
-def playabilityCheck(ctx, battler_id):
+async def playabilityCheck(ctx, battler_id):
     try:
         tempList = getHaltingConditions(battler_id)
     except:
-        ctx.send("No Playable Character available in this Account")
+        await ctx.send("No Playable Character available in this Account")
     if len(tempList) == 0:
         return True
     else:
-        ctx.send("Your current character is not playable due to the following condition(s): " + str(tempList) + ".\n")
+        await ctx.send("Your current character is not playable due to the following condition(s): " + str(tempList) + ".\n")
         return False
     
-def show(playerID):
+def show(playerID,bot):
     pObject = db.Battler.objects.get(battler_id= playerID)
+    gild = bot.get_guild(int(pObject.guild_id))
+    if gild == None: 
+        embed = discord.Embed(
+            title = "Error: Guild Not Found",
+            description = "The server you have registered to is no longer participating in the game. Please migrate to a new server before you can see your profile again",
+            colour = discord.Colour(0xFFFF00)
+        )
+        return embed
     has_character = True
     if pObject == None:
         return "User not found"
@@ -105,7 +113,7 @@ def show(playerID):
         colour = discord.Colour.red()
     )
     embed.set_footer(text="Profile("+playerID+") - Last Active : " + pObject.last_action_date.ctime())
-    embed.add_field(name="Guild", value=pObject.guild_id, inline=False)
+    embed.add_field(name="Guild", value=gild.name +"("+pObject.guild_id+")", inline=False)
     embed.add_field(name="Stored Money", value=pObject.money_stored, inline=False)
     #embed.add_field(name="Last Time Active", value=pObject.last_action_date.ctime(), inline=False)
     if has_character:
