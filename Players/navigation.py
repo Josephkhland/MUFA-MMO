@@ -1,8 +1,10 @@
 import mufadb as db
 import mufa_constants as mconst
 import mufa_world as mw 
+import mufadisplay as mdisplay
 import character
 import discord
+import asyncio
 from discord.ext import commands
 
 class Navigation(commands.Cog):
@@ -75,6 +77,85 @@ class Navigation(commands.Cog):
         finalize_message = prepare_message + "```"
         await ctx.send(finalize_message, embed = embed)
 
+    @commands.command(name='info')
+    async def show_instance_information(self, ctx, *args):
+        """Shows the information of the instance where your active character is at"""
+        battler = db.Battler.objects.get(battler_id = str(ctx.author.id))
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        await ctx.send(embed = mw.node_information(node))
+    
+    @commands.command(name='here')
+    async def show_node_members(self,ctx, *args):
+        battler = db.Battler.objects.get(battler_id = str(ctx.author.id))
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        nodeMemberStrings = mdisplay.node_members(node)
+        players = nodeMemberStrings[0]
+        monsters = nodeMemberStrings[1]
+        embed = discord.Embed(
+            title = "Instance Members",
+            description = "The players and monsters in the Instance are visible below",
+            colour = discord.Colour.blue()
+        )
+        c_t = 0 #Current Tab
+        totalTabs = len(max(players,monsters))
+        if players[c_t] == None or players[c_t] == '' :
+            players[c_t] = "NONE"
+        if monsters[c_t] == None or monsters[c_t] == '':
+            monsters[c_t] = "NONE"
+        embed.set_footer(text="Instance("+node.node_id+") - Members: Tab "+str(c_t+1)+"/" +str(totalTabs))
+        embed.add_field(name = "Players", value = players[c_t], inline = False)
+        embed.add_field(name = "Monsters", value = monsters[c_t], inline = False)
+        msg = await ctx.send(embed = embed)
+        if totalTabs > 1:
+            loop = True
+            previous_tab = '◀️'
+            next_tab = '▶️'
+            await msg.add_reaction(previous_tab)
+            await msg.add_reaction(next_tab)
+            def reaction_filter(reaction, user):
+                return str(user.id) == str(ctx.author.id) and str(reaction.emoji) in [previous_tab,next_tab]
+            while loop:
+                try:
+                    pending_collectors =[self.bot.wait_for('reaction_add', timeout=5, check = reaction_filter),
+                                         self.bot.wait_for('reaction_remove', timeout=5, check = reaction_filter)]                  
+                    done_collectors, pending_collectors = await asyncio.wait(pending_collectors, return_when=asyncio.FIRST_COMPLETED)
+                    for collector in pending_collectors:
+                        collector.cancel()
+                    for collector in done_collectors:
+                        reaction, user = await collector
+                    if reaction.emoji == next_tab:
+                        c_t = (c_t+1) % totalTabs
+                    elif reaction.emoji == previous_tab:
+                        c_t = (c_t-1) 
+                        if c_t <0: 
+                            c_t = totalTabs -1
+                    embed_edited = discord.Embed(
+                        title = "Instance Members",
+                        description = "The players and monsters in the Instance are visible below",
+                        colour = discord.Colour.blue()
+                    )
+                    embed_edited.set_footer(text="Instance("+node.node_id+") - Members: Tab "+str(c_t+1)+"/" +str(totalTabs))
+                    if c_t >= len(players): 
+                        embed_edited.add_field(name = "Players", value = players[-1], inline = False)
+                    else:
+                        if players[c_t] == None or players[c_t] == '':
+                            players[c_t] = "NONE"
+                        embed_edited.add_field(name = "Players", value = players[c_t], inline = False)
+                    if c_t >= len(monsters):
+                        embed_edited.add_field(name = "Monsters", value = monsters[-1], inline = False)
+                    else:
+                        if monsters[c_t] == None or monsters[c_t] == '':
+                            monsters[c_t] = "NONE"
+                        embed_edited.add_field(name = "Monsters", value = monsters[c_t], inline = False)
+                    await msg.edit(embed = embed_edited)
+                    pending_collectors = None
+                    done_collectors = None
+                except asyncio.TimeoutError:
+                    await msg.add_reaction('💤')
+                    loop = False
+            
 
 # The setup fucntion below is neccesarry. Remember we give bot.add_cog() the name of the class in this case MembersCog.
 # When we load the cog, we use the name of the file.

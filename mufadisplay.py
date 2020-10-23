@@ -41,3 +41,28 @@ def equipment(slot,item):
         return "Crash: `" + name +"`\n"
     if slot == 6:
         return "Ranged: `" + name +"`\n"
+
+
+def node_members(node):
+    playerBattlers = [""]
+    tab_count_players = 0
+    monsterBattlers = [""]
+    tab_count_monsters = 0
+    for m in node.members:
+        if m.faction == 0 :
+            for c in m.characters_list:
+                if c.is_dead == False and c.getInstance() == node:
+                    if len(playerBattlers[tab_count_players]) >500:
+                        tab_count_players += 1
+                        playerBattlers.append("")
+                    playerBattlers[tab_count_players] += c.name +"("+m.battler_id+"), "
+        elif m.faction == 1:
+            if len(playerBattlers[tab_count_monsters]) >500:
+                    tab_count_monsters += 1
+                    monsterBattlers.append("")
+            monsterBattlers[tab_count_monsters] += m.getCharacter().name + ", "
+    for i in range(len(playerBattlers)):
+        playerBattlers[i] = playerBattlers[i][:-2]
+    for i in range(len(monsterBattlers)):
+        monsterBattlers[i] = monsterBattlers[i][:-2]
+    return (playerBattlers,monsterBattlers)

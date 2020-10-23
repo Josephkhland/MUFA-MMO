@@ -14,7 +14,6 @@ env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
 import sys, traceback
 from discord.ext import commands
-
 TOKEN = os.getenv('DISCORD_TOKEN')
 # 2
 #bot = commands.Bot(command_prefix='!')
@@ -36,8 +35,8 @@ initial_extensions = ['Players.navigation',
                       'Guild.settings',
                       'Guild.actions',
                       'Moderator.initialization']
-
-bot = commands.Bot(command_prefix=get_prefix)
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix=get_prefix, intents =intents)
 
 # Here we load our extensions listed above in [initial_extensions].
 if __name__ == '__main__':
