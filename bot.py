@@ -75,15 +75,19 @@ async def register(ctx):
 async def spawn(ctx, *args):
     userID = str(ctx.author.id)
     if not character.checkRegistration(userID):
-        return print ("Not registered Player")
+        return await ctx.send("You are not a registered Player")
     if len(args) <= 0:
-        return print("Less Arguments than expected")
+        return await ctx.send("Less Arguments than expected")
     player_entity = db.Battler.objects.get(battler_id = userID)
+    if len(player_entity.characters_list) >= player_entity.maxCharacters():
+        return await ctx.send("Can't have more than 6 characters. If you still want to create a new one, you will have to abandon one of your current characters.")
     guildID = player_entity.guild_id
     if int(args[0]) <0 or int(args[0]) > len(player_entity.characters_list):
-        return print("Invalid Argument")
+        return await ctx.send("Invalid Argument")
     if int(args[0]) == 0 and len(args) < 2:
-        return "Name must be provided"
+        return await ctx.send("Name must be provided")
+    if len(args[1]) >24:
+        return await ctx.send("Name bigger than allowed. Name mustn't exceed 24 characters")
     character.spawn(userID, args[1], player_entity.descendant_options[int(args[0])], guildID)
     await ctx.send("Done")
 

@@ -179,6 +179,24 @@ class Profile(commands.Cog):
             message_to_send = "Successfully changed active character to: **"+battler.getCharacter().name+"**."
         await ctx.send(message_to_send)
     
+    @commands.command(name='abandon_character')
+    async def abandon_character(self, ctx, *args):
+        """Permamently deletes a character.
+           Use it to clear up space for more characters.
+        """
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.get(battler_id = playerID)
+        if int(args[0]) <0 or int(args[0]) >= len(battler.characters_list):
+            message_to_send = "Invalid argument"
+        else:
+            temp = battler.characters_list[int(args[0])].name
+            del battler.characters_list[int(args[0])]
+            if battler.active_character >= int(args[0]):
+                battler.active_character = max(0, battler.active_character -1)
+            battler.save()
+            message_to_send = "Goodbye forever: **"+temp+"**."
+        await ctx.send(message_to_send)
+    
     @commands.command(name='migrate')
     @commands.guild_only()
     async def migrate(self, ctx):

@@ -277,6 +277,9 @@ class Player(Battler):
         return
     def getCurrentNode(self):
         return self.getCharacter().getInstance()
+    
+    def maxCharacters(self):
+        return 6
 
 class Monster(Battler):
     character_stats = EmbeddedDocumentField(character)
