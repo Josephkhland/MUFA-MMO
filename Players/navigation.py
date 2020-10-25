@@ -15,10 +15,15 @@ class Navigation(commands.Cog):
     @commands.guild_only()
     async def teleport(self, ctx):
         """This command can be used by a registered player in order to teleport to the coordinates of a Server."""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         if not await character.playabilityCheck(ctx, str(ctx.author.id)):
             return
         p_coords = mw.get_battler_coordinates(str(ctx.author.id))
         n_id = mw.getGuildNode(str(ctx.guild.id))
+        node_info = db.Player.objects.get(battler_id = str(ctx.author.id)).getCharacter().getInstance()
+        if not isinstance(node_info, db.WorldNode):
+            return await ctx.send("You can't use Teleport while inside a Battle Instance or a Dungeon") 
         embed = mw.travel_to_node(str(n_id),str(ctx.author.id))
         n_coords = mw.get_battler_coordinates(str(ctx.author.id))
         try:finalize_message = "**Teleported to : ("+str(n_coords[0])+","+str(n_coords[1])+")**\nPrevious location ("+str(p_coords[0])+","+str(p_coords[1])+")"
@@ -30,6 +35,8 @@ class Navigation(commands.Cog):
     @commands.command(name='move', aliases=['travel'])
     async def move(self, ctx, *args):
         """Use this command to travel East, West, North or South in the World Map."""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         if not await character.playabilityCheck(ctx, str(ctx.author.id)):
             return
         temp_o = db.Battler.objects.get(battler_id = str(ctx.author.id))
@@ -80,13 +87,97 @@ class Navigation(commands.Cog):
     @commands.command(name='info')
     async def show_instance_information(self, ctx, *args):
         """Shows the information of the instance where your active character is at"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
         battler = db.Battler.objects.get(battler_id = str(ctx.author.id))
         pCharac = battler.getCharacter()
         node = pCharac.getInstance()
         await ctx.send(embed = mw.node_information(node))
     
+    @commands.command(name='monsters')
+    async def show_monsters(self,ctx,*args):
+        """Shows information about monsters in the instance"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        battler = db.Battler.objects.get(battler_id = str(ctx.author.id))
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        monsters= mdisplay.node_monsters(node)
+        embed = discord.Embed(
+            title = "Instance Members",
+            description = "The players and monsters in the Instance are visible below",
+            colour = discord.Colour.blue()
+        )
+        c_t = 0 #Current Tab
+        tab_size = 10
+        if len(monsters) % tab_size == 0 and len(monsters) != 0:
+            totalTabs =(len(monsters) // tab_size) -1
+        else:
+            totalTabs = (len(monsters) // tab_size)
+        
+        embed = discord.Embed(
+            title = "Instance Monsters",
+            description = "You can see the monsters in this instance below.",
+            colour = discord.Colour.blue()
+        )
+        embed.set_footer(text="Instance("+node.node_id+") - Monsters: Tab "+str(c_t+1)+"/" +str(totalTabs+1))
+        if c_t*tab_size != min((c_t+1)*tab_size,len(monsters)):
+            c_tab_monsters = monsters[c_t*tab_size::min((c_t+1)*tab_size,len(monsters))]
+            for mon in c_tab_monsters:
+                embed.add_field(name = mon.name +" - "+mon.battler_id, value = "Level: `"+str(mon.getCharacter().level)+"`", inline = False)
+        msg = await ctx.send(embed = embed)
+        if totalTabs >= 1:
+            loop = True
+            previous_tab = '◀️'
+            next_tab = '▶️'
+            await msg.add_reaction(previous_tab)
+            await msg.add_reaction(next_tab)
+            def reaction_filter(reaction, user):
+                return str(user.id) == str(ctx.author.id) and str(reaction.emoji) in [previous_tab,next_tab]
+            while loop:
+                try:
+                    pending_collectors =[self.bot.wait_for('reaction_add', timeout=5, check = reaction_filter),
+                                         self.bot.wait_for('reaction_remove', timeout=5, check = reaction_filter)]                  
+                    done_collectors, pending_collectors = await asyncio.wait(pending_collectors, return_when=asyncio.FIRST_COMPLETED)
+                    for collector in pending_collectors:
+                        collector.cancel()
+                    for collector in done_collectors:
+                        reaction, user = await collector
+                    if reaction.emoji == next_tab:
+                        c_t = (c_t+1) % totalTabs
+                    elif reaction.emoji == previous_tab:
+                        c_t = (c_t-1) 
+                        if c_t <0: 
+                            c_t = totalTabs 
+                    c_tab_monsters = monsters[c_t*tab_size::min((c_t+1)*tab_size,len(monsters))]
+                    embed_edited = discord.Embed(
+                        title = "Instance Monsters",
+                        description = "You can see the monsters in this instance below.",
+                        colour = discord.Colour.blue()
+                    )
+                    embed_edited.set_footer(text="Instance("+node.node_id+") - Monsters: Tab "+str(c_t+1)+"/" +str(totalTabs+1))
+                    if c_t*tab_size != min((c_t+1)*tab_size,len(monsters)):
+                        c_tab_monsters = monsters[c_t*tab_size::min((c_t+1)*tab_size,len(monsters))]
+                        for mon in c_tab_monsters:
+                            embed.add_field(name = mon.name +" - "+mon.battler_id, value = "Level: `"+str(mon.getCharacter().level)+"`", inline = False)
+                    await msg.edit(embed = embed_edited)
+                    pending_collectors = None
+                    done_collectors = None
+                except asyncio.TimeoutError:
+                    await msg.add_reaction('💤')
+                    loop = False
+    
+    
     @commands.command(name='here')
     async def show_node_members(self,ctx, *args):
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
         battler = db.Battler.objects.get(battler_id = str(ctx.author.id))
         pCharac = battler.getCharacter()
         node = pCharac.getInstance()

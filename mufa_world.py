@@ -4,6 +4,7 @@ import mongoengine
 import mufadb as db 
 import mufa_constants as mconst
 import discord
+import datetime
 import time 
 
 def generate():
@@ -109,11 +110,15 @@ def node_information(node):
     return embed
     
 def node_enter(node_id, battler_id):
-    this_node = db.Node.objects.get(node_id = node_id)
+    this_node = db.Node.objects.no_dereference().get(node_id = node_id)
     battler = db.Battler.objects.get(battler_id = battler_id)
     pCharac = battler.getCharacter()
     this_node.members.append(battler.to_dbref())
     this_node.save()
+    counter = 0
+    for mn in pCharac.instance_stack:
+        pCharac.instance_stack[counter] = mn.to_dbref()
+        counter += 1
     pCharac.enterInstance(this_node.to_dbref())
     try: 
         coords = this_node.coordinates
@@ -129,8 +134,16 @@ def node_exit(battler_id):
     battler = db.Battler.objects.get(battler_id = battler_id)
     pCharac = battler.getCharacter()
     this_node =pCharac.exitInstance()
+    counter_inst = 0
+    for inst in pCharac.instance_stack:
+        pCharac.instance_stack[counter_inst] = inst.to_dbref()
+        counter_inst += 1
     try:
         this_node.members.remove(battler.to_dbref())
+        counter = 0
+        for mn in this_node.members:
+            this_node.members[counter] = mn.to_dbref()
+            counter += 1
         this_node.save()
     except:
         print("Battler wasn't found in node list. He couldn't be removed")
@@ -140,6 +153,35 @@ def node_exit(battler_id):
 def travel_to_node(node_id, battler_id):
     node_exit(battler_id)
     return node_enter(node_id, battler_id)
+
+def node_go_deeper(node_id, battler_id):
+    battler = db.Battler.objects.get(battler_id = battler_id)
+    pCharac = battler.getCharacter()
+    current_node = pCharac.getInstance()
+    try:
+        current_node.members.remove(battler.to_dbref())
+        counter = 0
+        for mn in current_node.members:
+            current_node.members[counter] = mn.to_dbref()
+            counter += 1
+        current_node.save()
+    except:
+        print("Battler wasn't found in node list. He couldn't be removed")
+    return node_enter(node_id, battler_id)
+
+def node_return_upper(battler_id):
+    node_exit(battler_id)
+    battler = db.Battler.objects.get(battler_id = battler_id)
+    pCharac = battler.getCharacter()
+    current_node = pCharac.getInstance()
+    counter = 0
+    for mn in current_node.members:
+        current_node.members[counter] = mn.to_dbref()
+        counter += 1
+    current_node.members.append(battler.to_dbref())
+    
+    current_node.save()
+    return node_information(current_node)
 
 def getGuildNode(guild_id):
     return db.WorldNode.objects.get(guild_id = guild_id).node_id
@@ -154,3 +196,11 @@ def get_battler_coordinates(battler_id):
 
 def createNullObject():
     db.Item(name = "null_object").save()
+
+def generateMonsterID():
+    num = len(db.Monster.objects)
+    date = datetime.datetime.now()
+    day = date.strftime("%d")
+    month = date.strftime("%m")
+    year = date.strftime("%y")
+    return "MON"+str(day)+str(month)+str(year)+str(num)

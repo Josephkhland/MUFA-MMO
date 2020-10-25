@@ -355,8 +355,9 @@ class battlelog(EmbeddedDocument):
 
 class Battle(Node):
     loot = ListField(ReferenceField(Item))
-    money_loot = IntField()
+    money_loot = IntField(default = 0)
     actions_log = EmbeddedDocumentListField(battlelog)
+    player_limit = IntField(default = 1)
     meta = {'allow_inheritance': True}
 
 class Dungeon(Node):

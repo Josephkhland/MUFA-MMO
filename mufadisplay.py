@@ -48,7 +48,10 @@ def node_members(node):
     tab_count_players = 0
     monsterBattlers = [""]
     tab_count_monsters = 0
+    members_seen = []
     for m in node.members:
+        if m in members_seen: continue
+        members_seen.append(m)
         if m.faction == 0 :
             for c in m.characters_list:
                 if c.is_dead == False and c.getInstance() == node:
@@ -57,12 +60,20 @@ def node_members(node):
                         playerBattlers.append("")
                     playerBattlers[tab_count_players] += c.name +"("+m.battler_id+"), "
         elif m.faction == 1:
-            if len(playerBattlers[tab_count_monsters]) >500:
+            if len(monsterBattlers[tab_count_monsters]) >500:
                     tab_count_monsters += 1
                     monsterBattlers.append("")
             monsterBattlers[tab_count_monsters] += m.getCharacter().name + ", "
+    members_seen = None
     for i in range(len(playerBattlers)):
         playerBattlers[i] = playerBattlers[i][:-2]
     for i in range(len(monsterBattlers)):
         monsterBattlers[i] = monsterBattlers[i][:-2]
     return (playerBattlers,monsterBattlers)
+
+def node_monsters(node):
+    monsterBattlers = []
+    for m in node.members:
+        if m.faction == 1:
+            monsterBattlers.append(m)
+    return monsterBattlers

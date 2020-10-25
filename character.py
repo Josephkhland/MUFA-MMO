@@ -15,7 +15,7 @@ def spawn(playerID, name, descendant, guildID):
     if descendant.character_name == None :
         descendant.character_name = name
     coords = db.GuildHub.objects.get(guild_id = guildID).coordinates
-    temp = db.WorldNode.objects.get(coordinates = coords)
+    temp = db.WorldNode.objects.no_dereference().get(coordinates = coords)
     null_obj = db.Item.objects.get(name = "null_object").to_dbref()
     n_char = db.character(name = descendant.character_name,
                  willpower = descendant.will_bonus,
@@ -33,13 +33,15 @@ def spawn(playerID, name, descendant, guildID):
     curp = db.Battler.objects.get(battler_id = playerID)
     db.Battler.objects(battler_id = playerID).update(set__active_character =  len(curp.characters_list)-1)
     db.Battler.objects(battler_id= playerID).update(set__descendant_options = [db.descendant()])
+    temp.members.append(curp.to_dbref())
+    temp.save()
 
 def checkRegistration(playerID):
-    print(db.Battler.objects.get(battler_id = playerID))
-    if db.Battler.objects.get(battler_id= playerID) == None:
+    try:
+        if db.Battler.objects.get(battler_id= playerID) != None:
+            return True
+    except:
         return False
-    else :
-        return True
         
 def getHaltingConditions(battler_id):
     battler = db.Battler.objects.get(battler_id = battler_id)

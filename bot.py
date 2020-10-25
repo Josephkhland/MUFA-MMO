@@ -4,7 +4,6 @@ import random
 import mufa_constants as mconst
 import mufadb as db
 import mufa_world
-import battle
 import datetime
 import character
 import discord
@@ -32,6 +31,8 @@ def get_prefix(bot, message):
 # Think of it like a dot path import
 initial_extensions = ['Players.navigation',
                       'Players.profile',
+                      'Players.interact',
+                      'Players.battle',
                       'Guild.settings',
                       'Guild.actions',
                       'Moderator.initialization']

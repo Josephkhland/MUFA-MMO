@@ -57,5 +57,40 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
             mufa_world.insert_guild(str(guild.id),guild.name)
             mufa_world.createNullObject()
     
+    @commands.command(name='moderator_monster')
+    async def mod_mon_summon(self,ctx, *args):
+        user = str(ctx.author.id)
+        guild = ctx.guild    
+        if user in moderators_list:
+            if len(args) != 1:
+                await ctx.send("Invalid number of arguments")
+                return
+            try: 
+                node = db.Node.objects.get(node_id = args[0])
+            except:
+                await ctx.send("Instance not found!")
+                return
+            null_obj = db.Item.objects.get(name = "null_object").to_dbref()
+            n_char = db.character(name = "Test",
+                                willpower = 1,
+                                vitality = 1,
+                                agility = 1,
+                                strength = 1,
+                                karma = 1,
+                                current_health = 10,
+                                current_sanity = 10,
+                                armor_equiped = [null_obj,null_obj,null_obj],
+                                weapons_equiped = [null_obj,null_obj,null_obj,null_obj],
+                                instance_stack = [node.to_dbref()]
+                                )
+            new_id = mufa_world.generateMonsterID()
+            db.Monster(battler_id = new_id, name =n_char.name ,character_stats=n_char).save()
+            monstro = db.Monster.objects.get(battler_id = new_id).to_dbref()
+            node_placed = db.Node.objects.no_dereference().get(node_id = args[0])
+            node_placed.members.append(monstro)
+            node_placed.save()
+            await ctx.send("Monster Spawned")
+
+    
 def setup(bot):
     bot.add_cog(Initialization(bot))

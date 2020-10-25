@@ -13,6 +13,8 @@ class GuildActions(commands.Cog):
     
     @commands.command(name='guild_discover')
     async def rename(self, ctx):
+        if not character.checkRegistration():
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         playerID = str(ctx.author.id)
         playerUser = self.bot.get_user(ctx.author.id)
         battler = db.Battler.objects.get(battler_id = playerID)

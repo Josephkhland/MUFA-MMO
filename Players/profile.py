@@ -14,6 +14,8 @@ class Profile(commands.Cog):
     @commands.command(name='myprofile')
     async def show(self,ctx, user: discord.User = None):
         """Shows your Profile, or the profile of a mentioned user."""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         userID = str(ctx.author.id)
         if user != None :
             userID = str(user.id)
@@ -26,6 +28,8 @@ class Profile(commands.Cog):
            +myimage set imageURL 
            In order to set a new picture for your character.
         """
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         pCharac = battler.getCharacter()
@@ -39,6 +43,8 @@ class Profile(commands.Cog):
     @commands.command(name='mycharacter')
     async def my_character(self, ctx, *args):
         """Shows the details of your currently Active Character"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         pCharac = battler.getCharacter()
@@ -121,6 +127,8 @@ class Profile(commands.Cog):
     @commands.command(name='mycharacters')
     async def my_characters(self, ctx):
         """Shows an index of your characters"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         embed = discord.Embed(
@@ -155,6 +163,8 @@ class Profile(commands.Cog):
     @commands.command(name='suicide')
     async def suicide(self, ctx):
         """Kills your currently active character"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         pCharac = battler.getCharacter()
@@ -169,6 +179,8 @@ class Profile(commands.Cog):
            Use the index as seen in your character's list. ( !mycharacters ) 
            Correct usage: !switch_to_character index
         """
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         if int(args[0]) <0 or int(args[0]) >= len(battler.characters_list):
@@ -184,6 +196,8 @@ class Profile(commands.Cog):
         """Permamently deletes a character.
            Use it to clear up space for more characters.
         """
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         if int(args[0]) <0 or int(args[0]) >= len(battler.characters_list):
@@ -201,6 +215,8 @@ class Profile(commands.Cog):
     @commands.guild_only()
     async def migrate(self, ctx):
         """Change the Serve/Guild you are registered to."""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
         playerID = str(ctx.author.id)
         guildID = str(ctx.guild.id)
         battler = db.Player.objects.get(battler_id = playerID)
