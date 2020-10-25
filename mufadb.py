@@ -151,6 +151,7 @@ class character(EmbeddedDocument):
     coordinates = ListField(IntField())
     instance_stack = ListField(ReferenceField(Node), default =[])
     conditions = EmbeddedDocumentListField(activeCondition, default =[])
+    buffs = EmbeddedDocumentListField(activeCondition, default = [])
     
     #Three values:  armor_equiped[0] -> helmet,
     #               armor_equiped[1] -> chestpiece,
@@ -176,6 +177,13 @@ class character(EmbeddedDocument):
     is_dead = BooleanField(default = False)
     imageURL = StringField(default = "https://cdn.discordapp.com/embed/avatars/0.png")
     name = StringField()
+    
+    spell_resistance = IntField(default = 0)                                    #When targeted by a spell, reduce the success chance of it's effect on you by X%
+    mental_effect_resistance = IntField(default = 0)                            #When targeted by an effect that is tagged as Mental, you add this to your resistance.
+    physical_effect_resistance = IntField(default = 0)                          #When targeted by an effect that is tagged as Physical, you add this to your resistance 
+    condition_resistances = ListField(IntField(), default = array_zero_15 )     #When someone attempts to inflict a condition on you, use these to resist.
+    forced_exhaustion_resistance = IntField(default = 0)                        #When someone attempts to deal damage to your actions (Exhaustion Damage) use this to resist it.
+    
     
     def getInstance(self):
         return self.instance_stack[-1]
@@ -327,7 +335,8 @@ class Armor(Item):
     
     thorn_condition_inflict_chance = ListField(IntField(), default = array_zero_15)     #Upon getting hit, chance of inflicting conditions to attacker.
     thorn_condition_duration = ListField(IntField(), default = array_zero_15)           #Upon getting hit, duration of any condition that gets inflicted to attacker from Thorn effect.
-    thorn_force_exhaustion_damage = IntField()                                          #Upon getting hit, deals damage to the Attacker's Actions (Exhaustion Damage) (vs Players only)
+    thorn_force_exhaustion_damage = IntField(default = 0)                                          #Upon getting hit, deals damage to the Attacker's Actions (Exhaustion Damage) (vs Players only)
+
 
 class Weapon(Item):
     precision_scale = IntField(default = 0)                 #Weapon Stat | For each point in agility this is added to the Precision%
