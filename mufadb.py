@@ -380,6 +380,14 @@ class Battle(Node):
     player_limit = IntField(default = 1)
     meta = {'allow_inheritance': True}
 
+    def getFactionMember(self, mid, faction):
+        counter = 0
+        for member in members:
+            if member.faction == faction:
+                if counter == mid:
+                    return member
+                counter++
+        return None
 class Dungeon(Node):
     name = StringField()
     treasure = ListField(Item)
