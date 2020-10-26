@@ -69,25 +69,23 @@ class Buffs(Enum):
     DAMAGE_UP = 4                   #Increases total DAMAGE you deal by 1%
     KARMA_UP =5                     #Increases Karma by 1%
     SPELL_RES_UP = 6                #Increases Spell Resist by 10 %
-    MENTAL_EFF_RES_UP = 7           #Increases Resistance to Effect of a Mental Source by 10%
-    PHYSICAL_EFF_RES = 8            #Increases Resistance to Effect of a Physical Source by 10%
-    CRAFT_UP = 9                    #Increases Crafting chances / Dismantling chances by 10%
-    F_EXHAUSTION_RES_UP =10         #Increases Forced Exhaustion damage resistance by 10%
-    CONDITION_RES_POISONED = 11     #Increases corresponding condition resistance by 10%
-    CONDITION_RES_BURNING = 12
-    CONDITION_RES_FROZEN = 13
-    CONDITION_RES_PARALYZED = 14
-    CONDITION_RES_TERRIFIED = 15
-    CONDITION_RES_BLINDED = 16
-    CONDITION_RES_DEAFENED = 17
-    CONDITION_RES_SILENCED = 18
-    CONDITION_RES_CURSED = 19
-    CONDITION_RES_BLEEDING = 20
-    CONDITION_RES_SLOWED = 21
-    CONDITION_RES_WEAKENED = 22
-    CONDITION_RES_ASLEEP = 23
-    CONDITION_RES_PETRIFIED = 24
-    CONDITION_RES_DEAD = 25
+    CRAFT_UP = 7                    #Increases Crafting chances / Dismantling chances by 10%
+    F_EXHAUSTION_RES_UP =8         #Increases Forced Exhaustion damage resistance by 10%
+    CONDITION_RES_POISONED = 9     #Increases corresponding condition resistance by 10%
+    CONDITION_RES_BURNING = 10
+    CONDITION_RES_FROZEN = 11
+    CONDITION_RES_PARALYZED = 12
+    CONDITION_RES_TERRIFIED = 13
+    CONDITION_RES_BLINDED = 14
+    CONDITION_RES_DEAFENED = 15
+    CONDITION_RES_SILENCED = 16
+    CONDITION_RES_CURSED = 17
+    CONDITION_RES_BLEEDING = 18
+    CONDITION_RES_SLOWED = 19
+    CONDITION_RES_WEAKENED = 20
+    CONDITION_RES_ASLEEP = 21
+    CONDITION_RES_PETRIFIED = 22
+    CONDITION_RES_DEAD = 23
     
 class GuildPrivacy(Enum):
     CLOSED = 0                      #The Guild can't be entered by those that discover its node. 
@@ -198,6 +196,7 @@ class character(EmbeddedDocument):
     def checkLevel(self):
         if self.experience > self.exp_to_next_level:
             self.levelUp()
+            
     
     def levelUp(self):
         self.level+= 1
@@ -279,6 +278,15 @@ class Player(Battler):
     def updateCurrentCharacter(self, c):
         self.characters_list[self.active_character] = c
         return
+    
+    def updateCharacterByName(self, c):
+        counter = 0
+        for ch in self.characters_list:
+            if ch.name == c.name:
+                self.characters_list[counter] = c
+                return 
+            counter +=1
+    
     def getCurrentNode(self):
         return self.getCharacter().getInstance()
     

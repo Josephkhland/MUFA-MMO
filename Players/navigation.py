@@ -126,7 +126,7 @@ class Navigation(commands.Cog):
         )
         embed.set_footer(text="Instance("+node.node_id+") - Monsters: Tab "+str(c_t+1)+"/" +str(totalTabs+1))
         if c_t*tab_size != min((c_t+1)*tab_size,len(monsters)):
-            c_tab_monsters = monsters[c_t*tab_size::min((c_t+1)*tab_size,len(monsters))]
+            c_tab_monsters = monsters[c_t*tab_size:min((c_t+1)*tab_size,len(monsters))]
             for mon in c_tab_monsters:
                 embed.add_field(name = mon.name +" - "+mon.battler_id, value = "Level: `"+str(mon.getCharacter().level)+"`", inline = False)
         msg = await ctx.send(embed = embed)
@@ -153,7 +153,7 @@ class Navigation(commands.Cog):
                         c_t = (c_t-1) 
                         if c_t <0: 
                             c_t = totalTabs 
-                    c_tab_monsters = monsters[c_t*tab_size::min((c_t+1)*tab_size,len(monsters))]
+                    c_tab_monsters = monsters[c_t*tab_size:min((c_t+1)*tab_size,len(monsters))]
                     embed_edited = discord.Embed(
                         title = "Instance Monsters",
                         description = "You can see the monsters in this instance below.",
