@@ -120,9 +120,10 @@ def remove_condition(character, con_name):
     return character
     
 def check_halting_conditions(pCharac):
+    d_con_names = ["PETRIFIED", "DEAD", "ASLEEP", "FROZEN"]
     disabling_conditions = []
     for con in pCharac.conditions:
-        if con.name == "PETRIFIED" or con.name == "DEAD" or con.name == "ASLEEP":
+        if con.name in d_con_names:
             disabling_conditions.append(con.name)
     if len(disabling_conditions) == 0:
         return False
@@ -171,8 +172,8 @@ def deal_damage(charac, damage, information_message):
         information_message.append(charac.name + " is now DEAD!")
     return charac
     
-def slash(battler_attacker, battler_target, target_name, is_reaction = False):
-    should_react = not is_reaction
+def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction= False, reaction_to=0):
+    should_react = not reaction
     information_message = []
     target = db.character()
     if isinstance(battler_target, db.Monster):
@@ -182,8 +183,8 @@ def slash(battler_attacker, battler_target, target_name, is_reaction = False):
     if target == None :
         return information_message
     attacker = battler_attacker.getCharacter()
-    weapon = attacker.weapons_equiped[0]
-    total_AECR = calculate_total_AECR(attacker)
+    weapon = attacker.weapons_equiped[attack_type]
+    total_AECR = calculate_total_AECR(target)
     
     ASCM = 1                # Attacker Strength Condition Modifier (ASCM)
     AACM = 1                #Attacker Agility Condition Modifier (AACM)
@@ -201,9 +202,15 @@ def slash(battler_attacker, battler_target, target_name, is_reaction = False):
     
     #Calculate Number of Hits 
     attacker_precision = attacker.precision_base + attacker.agility*weapon.precision_scale*AACM +getBuff(attacker,"PRECISION_UP")
+    if attack_type == 1 or attack_type ==3:
+        attacker_precision = math.ceil(attacker_precision/2)
+    if attack_type == 2:
+        attack_precision = math.ceil(attacker_precision/4)
     if has_condition(attacker,"BLINDED"): 
         attacker_precision = 10
     target_evasion = max(target.evasion_base + target.agility*TACM - total_AECR +getBuff(target,"EVASION_UP") , 10)
+    if reaction_to == 3:
+        target_evasion += 100
     if has_condition(target,"DEAFENED"):
         target_evasion = 0
     hit_chance = max(attacker_precision - target_evasion,10)
@@ -215,7 +222,11 @@ def slash(battler_attacker, battler_target, target_name, is_reaction = False):
     total_exhaustion_damage = 0
     total_thorn_exhaustion_damage = 0
     
+    
     amp_chance = attacker.strength*weapon.damage_amp_scale*ASCM
+    if attack_type == 3:
+        amp_chance = attacker.agility*weapon.damage_amp_scale*AACM
+    
     condition_chances = []
     thorn_condition_chances = []
     thorn_condition_durations = []
@@ -262,8 +273,15 @@ def slash(battler_attacker, battler_target, target_name, is_reaction = False):
         if thorn_exhaustion >0 :
             if calculate_number_of_successes(attacker.forced_exhaustion_resistance + getBuff(attacker,"F_EXHAUSTION_RES_UP")) == 0:
                 total_thorn_exhaustion_damage+= thorn_exhaustion
-        damage = max(damage - damage_reduction_f, 0 )
-        damage = max(math.ceil(damage*(1 - damage_reduction_p/100)), 0)
+        if attack_type != 2:
+            damage = max(damage - damage_reduction_f, 0 )
+        else:
+            damage = damage +damage_reduction_f
+        if attack_type !=1:
+            damage = max(math.ceil(damage*(1 - damage_reduction_p/100)), 0)
+        if attack_type == 2 and (has_condition(target, "FROZEN") or has_condition(target, "PETRIFIED")):
+            damage = damage*2
+            attacker = remove_condition(target,"FROZEN")
         information_message.append(attacker.name + " hit "+ target.name+" for **"+ str(damage)+"** damage:knife:.")
         total_damage += damage
     target = deal_damage(target,total_damage)
@@ -294,11 +312,18 @@ def slash(battler_attacker, battler_target, target_name, is_reaction = False):
             information_message += monster_dead_share_exp(target)
         should_react = False
         information_message.append(target.name + " died and can't attack back.")
+    elif check_halting_conditions(target):
+        should_react = False
+        information_message.append(target.name + " is not capable of attacking back.")
+    
     
     if should_react == False:
         return information_message
     else:
-        return information_message + slash(battler_target, battler_attacker, attacker.name ,True)
+        if action_type == 3:
+            return information_message + slash(battler_target, battler_attacker, attacker.name ,True, 3)
+        else:
+            return information_message + slash(battler_target, battler_attacker, attacker.name ,True, action_type)
 
 
     

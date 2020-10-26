@@ -282,7 +282,7 @@ class Player(Battler):
     def getCharacterByName(self, name):
         counter = 0
         for ch in self.character_list:
-            if ch.name === name>:
+            if ch.name == name:
                 return ch
         return None
     
