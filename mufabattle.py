@@ -46,6 +46,16 @@ def add_character_condition(character, condition):
     character.conditions.append(condition)
     return character
 
+def check_halting_conditions(pCharac):
+    disabling_conditions = []
+    for con in pCharac.conditions:
+        if con.name == "PETRIFIED" or con.name == "DEAD" or con.name == "ASLEEP":
+            disabling_conditions.append(con.name)
+    if len(disabling_conditions) == 0:
+        return False
+    else:
+        return True
+
 def calculate_total_AECR(charac):
     """ Calculates the total Armor Evasion Chance Reduction from all pieces of armor in a character"""
     value = 0
@@ -60,8 +70,26 @@ def calculate_number_of_successes(number):
     if additional_success_chance >= diceroll:
         successes += 1
     return successes
+
+def deal_exhaustion(charac, exhaustion):
+    charac.actions_left -= exhaustion
+    con0 = charac.actions_left + charac.willpower <= 0
+    con1 = charac.actions_left + charac.vitality <= 0
+    con2 = charac.actions_left + charac.strength <= 0
+    con3 = charac.actions_left + charac.agility <= 0
+    if con0 or con1 or con2 or con3 :
+        charac.kill()
+    return charac
     
-def slash(battler_attacker, target):
+
+def deal_damage(charac, damage):
+    charac.current_health -= damage
+    if charac.current_health <= 0:
+        charac.kill()
+    return charac
+    
+def slash(battler_attacker, battler_target):
+    target = battler_target.getCharacter()
     attacker = battler_attacker.getCharacter()
     weapon = attacker.weapons_equiped[0]
     total_AECR = calculate_total_AECR(attacker)
@@ -82,8 +110,12 @@ def slash(battler_attacker, target):
     thorn_condition_chances = []
     thorn_condition_durations = []
     thorn_exhaustion = 0 
+    damage_reduction_f = 0
+    damage_reduction_p = 0
     for armor in target.armor_equiped:
         thorn_exhaustion += armor.thorn_force_exhaustion_danage
+        damage_reduction_f += armor.physical_damage_reduction_f
+        damage_reduction_p += armor.physical_damage_reduction_p
     for condition in range(15):
         condition_chances[condition] = weapon.on_hit_condition_inflict_chance[condition]
         condition_chances[condition] -= target.condition_resistances[condition]
@@ -116,3 +148,21 @@ def slash(battler_attacker, target):
         if thorn_exhaustion >0 :
             if calculate_number_of_successes(attacker.forced_exhaustion_resistance) == 0:
                 total_thorn_exhaustion_damage+= thorn_exhaustion
+        damage = max(damage - damage_reduction_f, 0 )
+        damage = max(math.ceil(damage*(1 - damage_reduction_p/100)), 0)
+        total_damage += damage
+    target = deal_damage(target,total_damage)
+    target = deal_exhaustion(target,total_exhaustion_damage)
+    attacker = deal_exhaustion(target, total_thorn_exhaustion_damage)
+    
+    #Promote changes to the database objects 
+    battler_attacker.updateCurrentCharacter(attacker)
+    battler_target.updateCurrentCharacter(target)
+    battler_attacker.save()
+    battler_target.save()
+    
+    #Proceed with reaction
+    if attacker.is_dead:
+        pass
+    if target.is_dead
+        pass 

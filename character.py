@@ -86,6 +86,7 @@ async def playabilityCheck(ctx, battler_id):
         tempList = getHaltingConditions(battler_id)
     except:
         await ctx.send("No Playable Character available in this Account")
+        return False
     if len(tempList) == 0:
         return True
     else:

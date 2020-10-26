@@ -111,8 +111,6 @@ class Item(Document):
     
     #Special Stats: 
     spell_resistance = IntField(default = 0)                                    #When targeted by a spell, reduce the success chance of it's effect on you by X%
-    mental_effect_resistance = IntField(default = 0)                            #When targeted by an effect that is tagged as Mental, you add this to your resistance.
-    physical_effect_resistance = IntField(default = 0)                          #When targeted by an effect that is tagged as Physical, you add this to your resistance 
     condition_resistances = ListField(IntField(), default = array_zero_15 )     #When someone attempts to inflict a condition on you, use these to resist.
     forced_exhaustion_resistance = IntField(default = 0)                        #When someone attempts to deal damage to your actions (Exhaustion Damage) use this to resist it.
     
@@ -179,8 +177,6 @@ class character(EmbeddedDocument):
     name = StringField()
     
     spell_resistance = IntField(default = 0)                                    #When targeted by a spell, reduce the success chance of it's effect on you by X%
-    mental_effect_resistance = IntField(default = 0)                            #When targeted by an effect that is tagged as Mental, you add this to your resistance.
-    physical_effect_resistance = IntField(default = 0)                          #When targeted by an effect that is tagged as Physical, you add this to your resistance 
     condition_resistances = ListField(IntField(), default = array_zero_15 )     #When someone attempts to inflict a condition on you, use these to resist.
     forced_exhaustion_resistance = IntField(default = 0)                        #When someone attempts to deal damage to your actions (Exhaustion Damage) use this to resist it.
     
