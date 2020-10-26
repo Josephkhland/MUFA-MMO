@@ -47,7 +47,7 @@ def copy_loot_to_node(chara):
     for item in chara.weapons_equiped:
         if itemDrops(item.drop_chance):
             node.loot.append(item)
-    for item in chara.inventory
+    for item in chara.inventory:
         if itemDrops(item.drop_chance):
             node.loot.append(item)
     node.save()
@@ -96,9 +96,9 @@ def getBuff(character, buff_name):
         return 10*summ
 
 def add_character_condition(character, condition):
-    for c in character.conditions
+    for c in character.conditions:
         if c.name == condition.name:
-            if c.duration = -1:
+            if c.duration == -1:
                 return
             elif c.duration >=0 and c.duration < condition.duration:
                 c.duration = condition.duration
@@ -171,10 +171,16 @@ def deal_damage(charac, damage, information_message):
         information_message.append(charac.name + " is now DEAD!")
     return charac
     
-def slash(battler_attacker, battler_target, is_reaction = False):
+def slash(battler_attacker, battler_target, target_name, is_reaction = False):
     should_react = not is_reaction
     information_message = []
-    target = battler_target.getCharacter()
+    target = db.character()
+    if isinstance(battler_target, db.Monster):
+        target = battler_target.getCharacter()
+    elif isinstance(battler_target, db.Player):
+        target = battler_target.getCharacterByName(target_name)
+    if target == None :
+        return information_message
     attacker = battler_attacker.getCharacter()
     weapon = attacker.weapons_equiped[0]
     total_AECR = calculate_total_AECR(attacker)
@@ -182,15 +188,15 @@ def slash(battler_attacker, battler_target, is_reaction = False):
     ASCM = 1                # Attacker Strength Condition Modifier (ASCM)
     AACM = 1                #Attacker Agility Condition Modifier (AACM)
     TACM= 1                 #Target Agility Condition Modifier (TACM)
-    if has_condition(attacker, "WEAKENED")
+    if has_condition(attacker, "WEAKENED"):
         ASCM = 0.5
-    if has_condition(attacker, "SLOWED")
+    if has_condition(attacker, "SLOWED"):
         AACM = 0.5
-    if has_condition(attacker, "PARALYZED")
+    if has_condition(attacker, "PARALYZED"):
         AACM = 0
-    if has_condition(target, "SLOWED")
+    if has_condition(target, "SLOWED"):
         TACM = 0.5
-    if has_condition(target, "PARALYZED)
+    if has_condition(target, "PARALYZED"):
         TACM = 0
     
     #Calculate Number of Hits 
@@ -281,7 +287,7 @@ def slash(battler_attacker, battler_target, is_reaction = False):
             information_message += monster_dead_share_exp(attacker)
         should_react = False
         information_message.append(attacker.name + " died so "+ target.name + " doesn't attack him back.")
-    if target.is_dead
+    if target.is_dead:
         #Add Loot to the Battle instance tables
         if isinstance(battler_attacker, db.Monster):
             copy_loot_to_node(target)
@@ -292,7 +298,7 @@ def slash(battler_attacker, battler_target, is_reaction = False):
     if should_react == False:
         return information_message
     else:
-        return information_message + slash(battler_target, battler_attacker, True)
+        return information_message + slash(battler_target, battler_attacker, attacker.name ,True)
 
 
     

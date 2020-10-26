@@ -279,6 +279,13 @@ class Player(Battler):
         self.characters_list[self.active_character] = c
         return
     
+    def getCharacterByName(self, name):
+        counter = 0
+        for ch in self.character_list:
+            if ch.name === name>:
+                return ch
+        return None
+    
     def updateCharacterByName(self, c):
         counter = 0
         for ch in self.characters_list:
