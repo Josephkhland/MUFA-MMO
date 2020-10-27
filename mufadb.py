@@ -134,7 +134,7 @@ class Item(Document):
     #Crafting Stats:
     crafting_recipe = ListField(ListField(IntField()), default = [])            #List of Resources required in format List([resource_id, quantity])
     dismantling_difficulty = IntField()                                         #Reduces Chance of acquiring each of its resources upon dismantling.
-    
+    value = IntField(default = 0)
     meta = {'allow_inheritance': True}
 
 class activeCondition(EmbeddedDocument):
@@ -265,6 +265,7 @@ class GuildHub(Document):
     invites_channel = StringField()
     privacy_setting = IntField(default = GuildPrivacy.CLOSED.value) 
     alliances = ListField(StringField(max_length = 20), default =[])  #List of Guild_ids that this guild is friendly with.
+    shop = ListField(ReferenceField(Item), default =[])
 
 class Battler(Document):
     battler_id = StringField(primary_key = True)

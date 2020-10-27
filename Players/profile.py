@@ -221,11 +221,11 @@ class Profile(commands.Cog):
         playerID = str(ctx.author.id)
         battler = db.Player.objects.get(battler_id = playerID)
         if len(battler.characters_list) == 0:
-            message_to_send = "You don't have an active character"
-        else:
-            pCharac = battler.getCharacter()
-            embedList = mdisplay.displayInventoryList(pCharac)
-            totalTabs = len(embedList)
+            return await ctx.send("You don't have an active character")
+        
+        pCharac = battler.getCharacter()
+        embedList = mdisplay.displayInventoryList(pCharac)
+        totalTabs = len(embedList)
         c_t = 0
         if len(embedList) == 0 : 
             return await ctx.send("You have no items in your inventory!")
@@ -257,9 +257,7 @@ class Profile(commands.Cog):
                 except asyncio.TimeoutError:
                     await msg.add_reaction('💤')
                     loop = False
-            
-        await ctx.send(message_to_send)
-    
+
     @commands.command(name='migrate')
     @commands.guild_only()
     async def migrate(self, ctx):
