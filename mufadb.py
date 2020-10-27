@@ -86,12 +86,28 @@ class Buffs(Enum):
     CONDITION_RES_ASLEEP = 21
     CONDITION_RES_PETRIFIED = 22
     CONDITION_RES_DEAD = 23
+
+class ItemType(Enum):
+    HELMET = 0
+    CHESTPIECE = 1
+    BOOTS = 2
+    SLASH = 3
+    PIERCE = 4
+    CRASH = 5
+    RANGED = 6
+    ARTIFACT = 7
+    SPELLBOOK = 8
     
 class GuildPrivacy(Enum):
     CLOSED = 0                      #The Guild can't be entered by those that discover its node. 
     ALLIANCE = 1                    #The Guild can only be entered by Players with a Base within an Allied Guild.
     OPEN = 2                        #The Guild is open and anyone that finds it can enter. 
 
+class PrimaryStat(Enum):
+    WIL = 0
+    VIT = 1
+    AGI = 2
+    STR = 3
 #Classes definitions
 
 class Item(Document):
@@ -350,7 +366,7 @@ class Armor(Item):
     physical_damage_reduction_f = IntField (default = 0)    #Armor Stat  | Flat damage reduction from Physical Sources
     magic_damage_reduction_f = IntField(default = 0)        #Armor Stat  | Flat damage reduction from Magical Sources
     physical_damage_reduction_p = IntField(default = 0)     #Armor Stat  | Percentage damage reduction from Physical Sources
-    Magic_damage_reduction_p = IntField(default = 0)        #Armor Stat  | Percentage damage reduction from Magical Sources
+    magic_damage_reduction_p = IntField(default = 0)        #Armor Stat  | Percentage damage reduction from Magical Sources
     
     thorn_condition_inflict_chance = ListField(IntField(), default = array_zero_15)     #Upon getting hit, chance of inflicting conditions to attacker.
     thorn_condition_duration = ListField(IntField(), default = array_zero_15)           #Upon getting hit, duration of any condition that gets inflicted to attacker from Thorn effect.

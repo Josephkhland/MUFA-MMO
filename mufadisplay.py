@@ -129,3 +129,62 @@ def display_battle_members(list_of_members, node_id):
         if counter == len(list_of_members):
             embedList.append(embed)
     return embedList
+    
+def displayInventoryList(character):
+    embedList = []
+    counter = 0
+    tab_size = 3
+    current_tab =0
+    total_tabs = 1+ len(character.inventory)/tab_size 
+    for item in character.inventory:
+        if counter >= current_tab*tab_size:
+            if counter != 0: embedList.append(embed)
+            current_tab += 1
+            embed = discord.Embed(
+                title = "Inventory",
+                description = "Use the indexes below to choose your targets when attacking.",
+                colour = discord.Colour.red()
+                )
+            embed.set_footer(text=character.name+" inventory - Last Active : " + datetime.datetime.now().ctime() + " - Tab "+str(current_tab)+"/"+str(total_tabs))
+        
+        name_string = str(counter)+item.name +" ("+db.ItemType(item.item_type).name+")"
+        conditions_string = "*Condition Resistances:*  "
+        for con_counter in range(15):
+            if item.condition_resistances[con_counter] != 0 :
+                condition_string += "**"+db.Conditions(con_counter).name +"** `"+str(item.condition_resistances[con_counter]) + "%`, "
+        conditions_string = condition_string[:-2]
+        forced_exhaustion_resistance = ""
+        spell_resistance_string =""
+        if item.spell_resistance != 0: 
+            spell_resistance_string = "**Spell Resistance:** `" +str(item.spell_resistance)+"%`"
+        if item.forced_exhaustion_resistance != 0: 
+            forced_exhaustion_resistance = "**Forced Exhaustion Resistance:** `"+ str(item.forced_exhaustion_resistance)+"%`"
+        
+        str_so_far = conditions_string + "\n" + forced_exhaustion_resistance + "\n" + spell_resistance_string +"\n"
+        if isinstance(item, db.Weapon):
+            str_dmg_amp_stat = "STR"
+            if item.item_type == 6:
+                str_dmg_amp_stat = "AGI"
+            precision_string = "**Precision:** `"+ str(item.precision_scale) + "%` per AGI."  
+            dmg_amp_string = "**Amplification DMG:** `" +str(item.damage_per_amp) + "` per AMPLIFICATION" 
+            dmg_amp_chance_string = "**Amplification Chance:** `" +str(item.damage_amp_scale)+ "%` per " + str_dmg_amp_stat
+            base_dmg_string = "**Base DMG:** `" + str(item.damage_base)
+            str_so_far += precision_string +"\n" + dmg_amp_string +"\n" + dmg_amp_chance_string +"\n" +base_dmg_string + "\n"
+        
+        if isinstance(item, db.Armor):
+            evasion_reduction_str = ""
+            if item.evasion_chance_reduction !=0:
+                evasion_reduction_str = "**Evasion reduction:** `-"+ str(item.evasion_chance_reduction) +"%` "
+            str_physical_DR= "**Physical Damage Reduction:** `" + str(item.physical_damage_reduction_f)+ "` FLAT, `"+ str(item.physical_damage_reduction_p) + "`% "
+            str_magic_DR = "**Magic Damage Reduction:** `" + str(item.magic_damage_reduction_f)+ "` FLAT, `"+ str(item.magic_damage_reduction_p) + "`% "
+            armor_set_str = "**Armor set: ** `" + item.armor_set.name +"`"
+            set_bonuses_str = "" 
+            for i in range(4):
+                if item.armor_set.full_set_bonus[i] != 0:
+                    set_bonuses_str +=  "["+ str(item.armor_set.two_items_set_bonus[i]) +"|"+ str(item.armor_set.full_set_bonus[i]) +"] "+db.PrimaryStat(i).name +"\n"
+            str_so_far = str_physical_DR + "\n" + str_magic_DR + "\n" + evasion_chance_reduction + "\n" + armor_set_str + "\n" + set_bonuses_str
+        embed.add_field(name = name_string , value = str_so_far , inline = False)
+        counter += 1
+        if counter == len(list_of_members):
+            embedList.append(embed)
+    return embedList

@@ -90,6 +90,8 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
             node_placed.members.append(monstro)
             node_placed.save()
             await ctx.send("Monster Spawned")
+    
+    
 
     
 def setup(bot):
