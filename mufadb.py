@@ -295,7 +295,7 @@ class Player(Battler):
             counter +=1
     def getCharacterInNode(self, node_id):
         for c in self.characters_list:
-            if c.getInstance().node_id == node_id
+            if c.getInstance().node_id == node_id:
                 return c
         return None
     
@@ -394,7 +394,7 @@ class Battle(Node):
             if member.faction != faction:
                 if counter == mid:
                     return member
-                counter++
+                counter += 1
         return None
     
     def getEnemies_of_faction(self,faction):

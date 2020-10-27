@@ -38,18 +38,45 @@ class Battle_Commands(commands.Cog):
             return await ctx.send("You are not registered. Please register by using the command `!register`")
         if not await character.playabilityCheck(ctx, str(ctx.author.id)):
             return
-        if len(args) == 0 or len(args) >1:
-            return await ctx.send("Invalid number of arguments.")
         battler = db.Player.objects.get(battler_id = str(ctx.author.id))
         pCharac = battler.getCharacter()
         node = pCharac.getInstance()
         if not isinstance(node, db.Battle): 
             return await ctx.send("You can only use this command in a Battle.")
-        enemies = getEnemies_of_faction(battler.faction)
+        enemies = node.getEnemies_of_faction(battler.faction)
         
-        for e in enemies:
-            char_to_print = e.getCharacterInNode(node.node_id)
-            
+        embedList = mdisplay.display_battle_members(enemies, node.node_id)
+        totalTabs = len(embedList)
+        c_t = 0
+        msg = await ctx.send(embed = embedList[0])
+        if totalTabs > 1:
+            loop = True
+            previous_tab = '◀️'
+            next_tab = '▶️'
+            await msg.add_reaction(previous_tab)
+            await msg.add_reaction(next_tab)
+            def reaction_filter(reaction, user):
+                return str(user.id) == str(ctx.author.id) and str(reaction.emoji) in [previous_tab,next_tab]
+            while loop:
+                try:
+                    pending_collectors =[self.bot.wait_for('reaction_add', timeout=5, check = reaction_filter),
+                                         self.bot.wait_for('reaction_remove', timeout=5, check = reaction_filter)]                  
+                    done_collectors, pending_collectors = await asyncio.wait(pending_collectors, return_when=asyncio.FIRST_COMPLETED)
+                    for collector in pending_collectors:
+                        collector.cancel()
+                    for collector in done_collectors:
+                        reaction, user = await collector
+                    if reaction.emoji == next_tab:
+                        c_t = (c_t+1) % totalTabs
+                    elif reaction.emoji == previous_tab:
+                        c_t = (c_t-1) 
+                        if c_t <0: 
+                            c_t = totalTabs -1
+                    msg.edit(embed = embedList[c_t])
+                except asyncio.TimeoutError:
+                    await msg.add_reaction('💤')
+                    loop = False
+                    
         
 
 def setup(bot):

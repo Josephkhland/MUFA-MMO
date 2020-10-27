@@ -1,5 +1,6 @@
 import mufadb as db
-import discords
+import datetime
+import discord
 #Function for creating a small digital display on the screen in the style `___10/100`
 def digits_panel(minvalue:int, maxvalue:int, size:int) -> str:
     m_v = str(minvalue)
@@ -87,16 +88,44 @@ def display_battle_members(list_of_members, node_id):
     current_tab =00
     total_tabs = 1+ len(list_of_members)/tab_size 
     for enemy in list_of_members:
-        if counter >= current_tab*tab_size or counter ==len(list_of_members)-1:
-            embedList.append(embed)
+        if counter >= current_tab*tab_size:
+            if counter != 0: embedList.append(embed)
             current_tab += 1
             embed = discord.Embed(
                 title = "BATTLE",
                 description = "Use the indexes below to choose your targets when attacking.",
                 colour = discord.Colour.red()
                 )
-            embed.set_footer(text="Battle("+node_id+") - Last Active : " + datetime.datetime.now().ctime() + " - Tab "+current_tab+"/"+str(total_tabs))
+            embed.set_footer(text="Battle("+node_id+") - Last Active : " + datetime.datetime.now().ctime() + " - Tab "+str(current_tab)+"/"+str(total_tabs))
         #ADD ENEMY TO EMBED
-        
+        enemy_char = enemy.getCharacterInNode(node_id)
+        name_to_add = str(counter) + ": " + enemy_char.name + "("+enemy.battler_id+")"
+        healthString = digits_panel(enemy_char.current_health,enemy_char.vitality*10, 8) + ":heart: "
+        sanityString = digits_panel(enemy_char.current_sanity,enemy_char.willpower*10, 8) + ":brain: "
+        disabling_conditions = [False,False,False]
+        this_value = "Conditions:  "
+        buff_value = "Buffs:  "
+        for con in enemy_char.conditions:
+            if con.name == 'DEAD':
+                disabling_conditions[0] = True
+            if con.name == 'PETRIFIED':
+                disabling_conditions[1] = True
+            if con.name == 'ASLEEP':
+                disabling_conditions[2] = True
+            this_value += "`"+con.name+"`, "
+        this_value = this_value[:-2]
+        for buf in enemy_char.buffs:
+            this_value += "`"+con.name+"`, "
+        buff_value = buff_value[:-2]
+        name_plugin = " "
+        if disabling_conditions[2]:
+            name_plugin += ":zzz: "
+        if disabling_conditions[1]:
+            name_plugin += ":rock: "
+        if disabling_conditions[0]:
+            name_plugin += ":skull: "
+        embed.add_field(name = name_to_add+name_plugin, value = healthString + sanityString + "\n" + this_value + "\n" + buff_value, inline = False)
         counter += 1
+        if counter == len(list_of_members):
+            embedList.append(embed)
     return embedList

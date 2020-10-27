@@ -134,7 +134,10 @@ def calculate_total_AECR(charac):
     """ Calculates the total Armor Evasion Chance Reduction from all pieces of armor in a character"""
     value = 0
     for armor in charac.armor_equiped:
-        value += armor.evasion_chance_reduction
+        if not isinstance(armor.name, db.Armor):
+            value += 0
+        else:
+            value += armor.evasion_chance_reduction
     return value
 
 def itemDrops(number):
@@ -181,9 +184,13 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
     elif isinstance(battler_target, db.Player):
         target = battler_target.getCharacterByName(target_name)
     if target == None :
+        information_message.append("ERROR: Can't find attack target!")
         return information_message
     attacker = battler_attacker.getCharacter()
     weapon = attacker.weapons_equiped[attack_type]
+    if not isinstance(weapon, db.Weapon):
+        information_message.append("ERROR: Can't perform this attack without equipping a weapon")
+        return information_message
     total_AECR = calculate_total_AECR(target)
     
     ASCM = 1                # Attacker Strength Condition Modifier (ASCM)
@@ -235,9 +242,10 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
     damage_reduction_f = target_armor_buffs
     damage_reduction_p = target_armor_buffs
     for armor in target.armor_equiped:
-        thorn_exhaustion += armor.thorn_force_exhaustion_danage
-        damage_reduction_f += armor.physical_damage_reduction_f
-        damage_reduction_p += armor.physical_damage_reduction_p
+        if isinstance(armor, db.Armor):
+            thorn_exhaustion += armor.thorn_force_exhaustion_danage
+            damage_reduction_f += armor.physical_damage_reduction_f
+            damage_reduction_p += armor.physical_damage_reduction_p
     for condition in range(15):
         condition_chances[condition] = weapon.on_hit_condition_inflict_chance[condition]
         condition_chances[condition] -= target.condition_resistances[condition] +getBuff(target,db.Buffs(condition-9).name)
@@ -245,8 +253,9 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
         thorn_condition_chances[condition] = 0
         thorn_condition_durations[condition] = 0
         for target_armor in target.armor_equiped:
-            thorn_condition_chances[condition] += target_armor.thorn_condition_inflict_chance[condition]
-            thorn_condition_durations[condition] += target_armor.thorn_condition_duration[condition]
+            if isinstance(target_armor, db.Armor):
+                thorn_condition_chances[condition] += target_armor.thorn_condition_inflict_chance[condition]
+                thorn_condition_durations[condition] += target_armor.thorn_condition_duration[condition]
         thorn_condition_chances[condition] -= attacker.condition_resistances[condition] +getBuff(attacker,db.Buffs(condition-9).name)
         thorn_condition_chances[condition] = max (0, thorn_condition_chances[condition]) 
     for hit in range(number_of_hits):
