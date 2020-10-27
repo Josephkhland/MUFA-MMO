@@ -293,6 +293,11 @@ class Player(Battler):
                 self.characters_list[counter] = c
                 return 
             counter +=1
+    def getCharacterInNode(self, node_id):
+        for c in self.characters_list:
+            if c.getInstance().node_id == node_id
+                return c
+        return None
     
     def getCurrentNode(self):
         return self.getCharacter().getInstance()
@@ -305,6 +310,9 @@ class Monster(Battler):
     behaviour = IntField() #Monster Behaviors will be figured out later.
     faction = IntField(default = 1)
     def getCharacter(self):
+        return self.character_stats
+    
+    def getCharacterInNode(self, node):
         return self.character_stats
 
 class GhostBattler(Battler):
@@ -380,14 +388,22 @@ class Battle(Node):
     player_limit = IntField(default = 1)
     meta = {'allow_inheritance': True}
 
-    def getFactionMember(self, mid, faction):
+    def getMember_not_in_faction(self, mid, faction):
         counter = 0
-        for member in members:
-            if member.faction == faction:
+        for member in self.members:
+            if member.faction != faction:
                 if counter == mid:
                     return member
                 counter++
         return None
+    
+    def getEnemies_of_faction(self,faction):
+        enemies = []
+        for member in self.members:
+            if member.faction != faction:
+                enemies.append(member)
+        return enemies
+    
 class Dungeon(Node):
     name = StringField()
     treasure = ListField(Item)

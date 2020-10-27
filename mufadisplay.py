@@ -1,4 +1,5 @@
 import mufadb as db
+import discords
 #Function for creating a small digital display on the screen in the style `___10/100`
 def digits_panel(minvalue:int, maxvalue:int, size:int) -> str:
     m_v = str(minvalue)
@@ -77,3 +78,25 @@ def node_monsters(node):
         if m.faction == 1:
             monsterBattlers.append(m)
     return monsterBattlers
+
+def display_battle_members(list_of_members, node_id):
+   
+    embedList = []
+    counter = 0
+    tab_size = 10
+    current_tab =00
+    total_tabs = 1+ len(list_of_members)/tab_size 
+    for enemy in list_of_members:
+        if counter >= current_tab*tab_size or counter ==len(list_of_members)-1:
+            embedList.append(embed)
+            current_tab += 1
+            embed = discord.Embed(
+                title = "BATTLE",
+                description = "Use the indexes below to choose your targets when attacking.",
+                colour = discord.Colour.red()
+                )
+            embed.set_footer(text="Battle("+node_id+") - Last Active : " + datetime.datetime.now().ctime() + " - Tab "+current_tab+"/"+str(total_tabs))
+        #ADD ENEMY TO EMBED
+        
+        counter += 1
+    return embedList
