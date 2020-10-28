@@ -49,18 +49,21 @@ class GuildActions(commands.Cog):
         if len(battler.characters_list) == 0:
             return await ctx.send("You don't have an active character.")
         pCharac = battler.getCharacter()
-        if pCharac.is_dead == 0:
+        if pCharac.is_dead:
             return await ctx.send("You can't use the shop with a dead character.")
         guild = db.GuildHub.objects.get(guild_id = str(ctx.guild.id))
         
         analytic = False
-        if args[0] == "-i":
-            analytic = True
+        try:
+            if args[0] == "-i":
+                analytic = True
+        except:
+            analytic = False 
         embedList = mdisplay.displayShopList(guild, analytic)
         totalTabs = len(embedList)
         c_t = 0
         if len(embedList) == 0 : 
-            return await ctx.send("You have no items in your inventory!")
+            return await ctx.send("There are no items in the shop!")
         msg = await ctx.send(embed = embedList[0])
         if totalTabs > 1:
             loop = True

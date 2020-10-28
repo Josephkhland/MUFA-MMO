@@ -111,6 +111,7 @@ class PrimaryStat(Enum):
 #Classes definitions
 
 class Item(Document):
+    item_id = IntField(primary_key = True)
     name = StringField(max_length = 50)
     #item_types:    0 -> helmet (armor), 
     #               1 -> chestpiece (armor),

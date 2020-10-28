@@ -3,3 +3,5 @@ world_size = {
     "x" : 5,
     "y" : 5
 }
+
+currency = "Gold"

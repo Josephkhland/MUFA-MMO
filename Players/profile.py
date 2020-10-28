@@ -2,6 +2,7 @@ import mufadb as db
 import mufa_constants as mconst
 import mufa_world as mw 
 import mufadisplay as mdisplay
+import mufa_item_management as mim
 import character
 import datetime
 import discord
@@ -117,7 +118,7 @@ class Profile(commands.Cog):
         
         #Setting up Inventory Field
         inventoryString = "Use `+myinventory` to access your inventory\n\n"
-        inventoryString+= ":scales:Carrying `"+str(len(pCharac.inventory))+"/"+str(pCharac.strength*5)+"` items   "
+        inventoryString+= ":scales:Carrying `"+str(len(pCharac.inventory))+"/"+str(pCharac.strength*6)+"` items   "
         inventoryString+= ":coin: Gold Carried `"+str(pCharac.money_carried)+"`"
         embed.add_field(name=":handbag:Inventory:handbag:", value=inventoryString, inline=False)
         embed.set_thumbnail(url= pCharac.imageURL)
@@ -270,6 +271,79 @@ class Profile(commands.Cog):
         battler.guild_id = guildID
         battler.save()
         await ctx.send("Migrated to **"+ ctx.guild.name + "** succesfully!")
+    
+    @commands.command(name='compare')
+    async def compare_items(self, ctx, *args):
+        """Compare an item, with the one you have equipped in the according slot, use with"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        battler = db.Player.objects.get(battler_id = str(ctx.author.id))
+        
+        if len(args) <1 or len(args) >2:
+            return await ctx.send("Invalid number of arguments")
+        storage_aliases = ["-s", "s", "storage", "vault", "house"]
+        if args[1] in storage_aliases:
+            return await ctx.send(embed =mim.compare_item(int(args[0]),battler,True))
+        else: 
+            return await ctx.send(embed =mim.compare_item(int(args[0]),battler,False))
+    
+    @commands.command(name='equip')
+    async def equip_item(self, ctx, *args):
+        """Equip an item from your inventory"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        battler = db.Player.objects.get(battler_id = str(ctx.author.id))
+        
+        if len(args) <1 or len(args) >2:
+            return await ctx.send("Invalid number of arguments")
+        item_index = int(args[0])
+        try:
+            slot_index = int(args[1])
+        except: 
+            slot_index = 0
+        return await ctx.send(mim.equipItem(item_index,battler,slot_index))
+    
+    @commands.command(name='unequip')
+    async def unequip_item(self, ctx, *args):
+        """Place an equipped item in your inventory"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        battler = db.Player.objects.get(battler_id = str(ctx.author.id))
+        
+        if len(args) !=1 :
+            return await ctx.send("Invalid number of arguments")
+        slot_index = int(args[0])
+        return await ctx.send(mim.unequipItem(battler,slot_index))
+    
+    @commands.command(name='storeitem')
+    @commands.guild_only()
+    async def store_item(self, ctx, *args):
+        """Place an item from inventory to Storage"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        battler = db.Player.objects.get(battler_id = str(ctx.author.id))
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        if node.guild_id != battler_id.guild_id:
+            return await ctx.send("Your currently active character is near your guild.")
+        if len(args) !=1 :
+            return await ctx.send("Invalid number of arguments")
+        slot_index = int(args[0])
+        await ctx.send(storeItem(pCharac.inventory, slot_index, battler))
+        inventory = pCharac.inventory
+        del inventory[slot_index]
+        pCharac.inventory = inventory
+        battler.updateCurrentCharacter(pCharac)
+        battler.save()
+        return
 
 # The setup fucntion below is neccesarry. Remember we give bot.add_cog() the name of the class in this case MembersCog.
 # When we load the cog, we use the name of the file.

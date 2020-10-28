@@ -198,7 +198,7 @@ def createNullObject():
     db.Item(name = "null_object").save()
 
 def generateMonsterID():
-    num = str(len(db.Monster.objects))
+    num = str(hex(len(db.Monster.objects)).lstrip("0x"))
     date = datetime.datetime.now()
     day = date.strftime("%d")
     month = date.strftime("%m")
