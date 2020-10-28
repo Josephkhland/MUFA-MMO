@@ -79,6 +79,7 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
                 await ctx.send("Instance not found!")
                 return
             null_obj = db.Item.objects.get(name = "null_object").to_dbref()
+            weapon_slash = db.Weapon.objects.get(name = "Demo Slash").to_dbref()
             n_char = db.character(name = "Test",
                                 willpower = 1,
                                 vitality = 1,
@@ -88,7 +89,7 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
                                 current_health = 10,
                                 current_sanity = 10,
                                 armor_equiped = [null_obj,null_obj,null_obj],
-                                weapons_equiped = [null_obj,null_obj,null_obj,null_obj],
+                                weapons_equiped = [weapon_slash,null_obj,null_obj,null_obj],
                                 instance_stack = [node.to_dbref()]
                                 )
             new_id = mufa_world.generateMonsterID()

@@ -3,8 +3,10 @@ import mufadb as db
 import mongoengine
 import mufa_world as mw
 import mufadisplay as mdisplay
+import mufa_item_management as mim
 import datetime
 import discord
+import math 
 
 def log_entry(battler_obj, description):
     return db.battlelog(battler = battler_obj.to_dbref(), 
@@ -167,7 +169,7 @@ def deal_exhaustion(charac, exhaustion):
 
 def deal_damage(charac, damage, information_message):
     charac.current_health -= damage
-    if damage > 0 : 
+    if damage > 0 and has_condition(charac, "ASLEEP") : 
         charac = remove_condition(charac,"ASLEEP")
         information_message.append(charac.name + " is no longer ASLEEP!")
     if charac.current_health <= 0:
@@ -238,12 +240,13 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
     thorn_condition_chances = []
     thorn_condition_durations = []
     thorn_exhaustion = 0 
+    damage =0
     target_armor_buffs = getBuff(target,"ARMOR_UP")
     damage_reduction_f = target_armor_buffs
     damage_reduction_p = target_armor_buffs
     for armor in target.armor_equiped:
         if isinstance(armor, db.Armor):
-            thorn_exhaustion += armor.thorn_force_exhaustion_danage
+            thorn_exhaustion += armor.thorn_force_exhaustion_damage
             damage_reduction_f += armor.physical_damage_reduction_f
             damage_reduction_p += armor.physical_damage_reduction_p
     for condition in range(15):
@@ -260,8 +263,8 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
         thorn_condition_chances[condition] -= attacker.condition_resistances[condition] +getBuff(attacker,db.Buffs(condition+9).name)
         thorn_condition_chances[condition] = max (0, thorn_condition_chances[condition]) 
     for hit in range(number_of_hits):
-        damage = weapon.damage_base + calculate_number_of_successes(amp_chance)*damage_per_amp
-        damage = math.ceil(damage(100 + getBuff(attacker,"DAMAGE_UP"))/100)
+        damage = weapon.damage_base + calculate_number_of_successes(amp_chance)*weapon.damage_per_amp
+        damage = math.ceil(damage*(100 + getBuff(attacker,"DAMAGE_UP"))/100)
         for i in range(15):
             if calculate_number_of_successes(condition_chances[i]) >= 1 :
                 condition_to_give = db.activeCondition(name = db.Conditions(i).name,
@@ -277,7 +280,7 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
                                                        )
                 attacker = add_character_condition(attacker,condition_to_give)
                 information_message.append(attacker.name + " is now `"+ condition_to_give.name+"` due to a Thorn effect of "+target.name+".")
-        if weapon.on_hit_force_exhaustion_damage > 0 :
+        if weapon.on_hit_force_exhaustion_damage != None and weapon.on_hit_force_exhaustion_damage > 0 :
             if calculate_number_of_successes(target.forced_exhaustion_resistance+ getBuff(target,"F_EXHAUSTION_RES_UP")) == 0:
                 total_exhaustion_damage += weapon.on_hit_force_exhaustion_damage
         if thorn_exhaustion >0 :
@@ -294,14 +297,19 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
             attacker = remove_condition(target,"FROZEN")
         information_message.append(attacker.name + " hit "+ target.name+" for **"+ str(damage)+"** damage:knife:.")
         total_damage += damage
-    target = deal_damage(target,total_damage)
-    information_message.append(attacker.name + " dealt a total of **"+ str(damage)+"** damage:knife: to "+ target.name+" after *"+str(number_of_hits)+" hits* .")
-    target = deal_exhaustion(target,total_exhaustion_damage)
-    information_message.append(target.name + " received exhaustion bringing down his **energy**:zap: by **"+ str(total_exhaustion_damage)+"**.")
-    attacker = deal_exhaustion(target, total_thorn_exhaustion_damage)
-    information_message.append(attacker.name + " received exhaustion from a Thorn effect, bringing down his **energy**:zap: by **"+ str(total_thorn_exhaustion_damage)+"**.")
+    if total_damage != 0:
+        target = deal_damage(target,total_damage, information_message)
+        information_message.append(attacker.name + " dealt a total of **"+ str(total_damage)+"** damage:knife: to "+ target.name+" after *"+str(number_of_hits)+" hits* .")
+    if total_exhaustion_damage != 0:
+        target = deal_exhaustion(target,total_exhaustion_damage)
+        information_message.append(target.name + " received exhaustion bringing down his **energy**:zap: by **"+ str(total_exhaustion_damage)+"**.")
+    if total_thorn_exhaustion_damage != 0:
+        attacker = deal_exhaustion(attacker, total_thorn_exhaustion_damage)
+        information_message.append(attacker.name + " received exhaustion from a Thorn effect, bringing down his **energy**:zap: by **"+ str(total_thorn_exhaustion_damage)+"**.")
     
     #Promote changes to the database objects 
+    attacker.instance_stack = mim.turnListToDBREF(attacker.instance_stack)
+    target.instance_stack = mim.turnListToDBREF(target.instance_stack)
     battler_attacker.updateCurrentCharacter(attacker)
     battler_target.updateCurrentCharacter(target)
     battler_attacker.save()
@@ -330,10 +338,10 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
     if should_react == False:
         return information_message
     else:
-        if action_type == 3:
-            return information_message + slash(battler_target, battler_attacker, attacker.name ,True, 3)
+        if attack_type == 3:
+            return information_message + attack(battler_target, battler_attacker, attacker.name ,0,True, 3)
         else:
-            return information_message + slash(battler_target, battler_attacker, attacker.name ,True, action_type)
+            return information_message + attack(battler_target, battler_attacker, attacker.name ,0,True, attack_type)
 
 
     

@@ -306,7 +306,7 @@ class Player(Battler):
     
     def getCharacterByName(self, name):
         counter = 0
-        for ch in self.character_list:
+        for ch in self.characters_list:
             if ch.name == name:
                 return ch
         return None
