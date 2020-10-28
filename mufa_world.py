@@ -194,9 +194,6 @@ def get_battler_coordinates(battler_id):
     except:
         return None
 
-def createNullObject():
-    db.Item(name = "null_object").save()
-
 def generateMonsterID():
     num = str(hex(len(db.Monster.objects)).lstrip("0x"))
     date = datetime.datetime.now()
@@ -204,3 +201,76 @@ def generateMonsterID():
     month = date.strftime("%m")
     year = date.strftime("%y")
     return "MON"+str(day)+str(month)+str(year)+num.zfill(5)
+    
+def generateItemID():
+    return len(db.Item.objects)
+    
+
+def createNullObject():
+    db.Item(item_id = generateItemID(),
+            name = "null_object").save()
+
+def createDemoWeapon(weapon_type):
+    wt = "Slash"
+    if weapon_type == 0:
+        wt = "Slash"
+    elif weapon_type == 1:
+        wt = "Pierce"
+    elif weapon_type ==2:
+        wt = "Crash"
+    elif weapon_type ==3:
+        wt = "Ranged"
+    db.Weapon(item_id = generateItemID(),
+            name = "Demo "+wt, 
+            item_type = weapon_type+3,
+            precision_scale = 10,
+            damage_amp_scale = 5,
+            damage_per_amp = 2,
+            damage_base = 3).save()
+            
+def createDemoArmor(armor_type):
+    wt = "Helmet"
+    if armor_type == 0:
+        wt = "Helmet"
+    elif armor_type == 1:
+        wt = "Chestpiece"
+    elif armor_type ==2:
+        wt = "Boots"
+    db.Armor(item_id = generateItemID(),
+            name = "Demo "+wt,
+            armor_set = db.ArmorSet.objects.get(name = "Demo").to_dbref(),
+            item_type = armor_type,
+            evasion_chance_reduction = 10,
+            physical_damage_reduction_f = 7,
+            physical_damage_reduction_p = 10).save()
+
+def createDemoArmorSet():
+    db.ArmorSet(name = "Demo",
+                two_items_set_bonus = [0,0,0,0],
+                full_set_bonus = [2,2,2,2]).save()
+
+def demoItemsGuild(guild):
+    items_list = guild.shop
+    for i in range(7):
+        wt = "NOPE"
+        if i == 0:
+            wt = "Helmet"
+        elif i == 1:
+            wt = "Chestpiece"
+        elif i ==2:
+            wt = "Boots"
+        elif i == 3:
+            wt = "Slash"
+        elif i == 4:
+            wt = "Pierce"
+        elif i ==5:
+            wt = "Crash"
+        elif i ==6:
+            wt = "Ranged"
+        if i <3: 
+            items_list.append(db.Armor.objects.get(name = "Demo "+wt))
+        if i >=3:
+            items_list.append(db.Weapon.objects.get(name = "Demo "+wt))
+    guild.shop = items_list 
+    guild.save()
+

@@ -12,8 +12,13 @@ def storeItem(list_to_grab, id_of_item_to_move, player):
     player.items_stored.append(list_to_grab[id_of_item_to_move])
     player.save()
     return "Successfully stored "+ list_to_grab[id_of_item_to_move].name + " to player storage."
-    
 
+def turnListToDBREF(listname):
+    new_list = []
+    for i in listname:
+        new_list.append(i.to_dbref())
+    return new_list
+    
 def pickupItem(node_with_treasure, id_of_item_to_grab, battler):
     character_to_give = battler.getCharacter()
     item_list = node_with_treasure.treasure
@@ -24,11 +29,14 @@ def pickupItem(node_with_treasure, id_of_item_to_grab, battler):
     character_to_give = copyItem(item_list, id_of_item_to_grab, character_to_give)
     name_of_item = item_list[id_of_item_to_grab].name
     del item_list[id_of_item_to_grab]
+    item_list = turnListToDBREF(item_list)
     node_with_treasure.treasure = item_list
     node_with_treasure.save()
+    character_to_give.inventory = turnListToDBREF(character_to_give.inventory)
     battler.updateCurrentCharacter(character_to_give)
     battler.save()
     return character_to_give.name +" picked up " + name_of_item +"."
+
     
 def buyItem(buyer, guild, id_of_item_to_grab):
     bCharacter = buyer.getCharacter()
@@ -49,6 +57,8 @@ def buyItem(buyer, guild, id_of_item_to_grab):
                 
         bCharacter.money_carried -= shop_list[id_of_item_to_grab].value
         bCharacter = copyItem(shop_list, id_of_item_to_grab, bCharacter)
+        bCharacter.inventory = turnListToDBREF(bCharacter.inventory)
+        bCharacter.instance_stack = turnListToDBREF(bCharacter.instance_stack)
         buyer.updateCurrentCharacter(bCharacter)
         buyer.save()
         return bCharacter.name + " has purchased `" + shop_list[id_of_item_to_grab].name + "` for a price of "+ str(shop_list[id_of_item_to_grab].value) + mc.currency
@@ -65,8 +75,9 @@ def sellItem(seller, id_of_item_to_sell):
         return "ERROR: You don't have an item in that inventory slot"
     name_of_item = inventory[id_of_item_to_give].name 
     del inventory[id_of_item_to_give]
-    sCharacter.inventory = inventory
+    sCharacter.inventory = turnListToDBREF(inventory)
     sCharacter.money_carried += money
+    sCharacter.instance_stack = turnListToDBREF(sCharacter.instance_stack)
     seller.updateCurrentCharacter(sCharacter)
     seller.save()
     return sCharacter.name +" sold " + name_of_item + " for `" +str(money) +"`."
@@ -115,7 +126,7 @@ def compare_item(id_in_list, player, storage = False):
         equipedStr = "(SPELLBOOK)"
     embed = discord.Embed(
                 title = "Compare Items",
-                description = "Comparing "+item_list[id_in_list].name + " with the equiped "+item_to_compare.name,
+                description = "Comparing "+item_list[id_in_list].name + " with the equipped "+item_to_compare.name,
                 colour = discord.Colour.red()
                 )
     name_string = str(id_in_list)+": "+item_list[id_in_list].name + " "+locationStr
@@ -135,6 +146,8 @@ def compare_item(id_in_list, player, storage = False):
     return embed
 
 def removeArmorSet(character):
+    if character.armor_set == None: 
+        return character
     if character.set_bonus_specification == 2:
         character.willpower -= character.armor_set.full_set_bonus[0]
         character.vitality -=character.armor_set.full_set_bonus[1]
@@ -160,16 +173,19 @@ def equipArmorSet(character):
         character.strength +=character.armor_set.two_items_set_bonus[3]
     return character
 
-def checkArmorSet(character):
+def checkArmorSet(character: db.character):
     set_names = []
     counter = 0
-    for armor in character.armor_equiped:
+    armors_equipped = character.armor_equiped
+    print(armors_equipped)
+    for armor in armors_equipped:
         if armor.name != "null_object" and armor.item_type != 8:
             set_names.append(armor.armor_set.name)
         else :
             set_names.append(str(counter))
         counter += 1
-    character = removeArmorSet(character)
+    if character.armor_set != None:
+        character = removeArmorSet(character)
     if set_names[0] == set_names[1]:
         if set_names[1] == set_names[2]:
             character.armor_set = character.armor_equiped[0].armor_set
@@ -185,9 +201,12 @@ def checkArmorSet(character):
             character.armor_set = character.armor_equiped[0].armor_set
             character.set_bonus_specification = 2
         else:
-            character.armor_set = character.armor_equiped[1].armor_set
+            character.armor_set = None
             character.set_bonus_specification = 0
     character = equipArmorSet(character)
+    if character.armor_set != None:
+        arm_set = character.armor_set
+        character.armor_set = arm_set.to_dbref()
     return character
 
 def equipItem(id_in_list, player, slot_for_spellbook = 0):
@@ -251,8 +270,12 @@ def equipItem(id_in_list, player, slot_for_spellbook = 0):
             sCharacter.weapons_equiped[slot_for_spellbook] = item_to_equip
     sCharacter = checkArmorSet(sCharacter)
     del inventory[id_in_list]
-    sCharacter.inventory = inventory
+    sCharacter.armor_equiped = turnListToDBREF(sCharacter.armor_equiped)
+    sCharacter.weapons_equiped = turnListToDBREF(sCharacter.weapons_equiped)
+    sCharacter.inventory = turnListToDBREF(inventory)
+    sCharacter.instance_stack = turnListToDBREF(sCharacter.instance_stack)
     player.updateCurrentCharacter(sCharacter)
+    player.save()
     return "Successfully equipped " +item_to_equip.name + " to "+ sCharacter.name + "\n"
 
 def unequipItem(player, slot_id):
@@ -270,7 +293,7 @@ def unequipItem(player, slot_id):
             inventory.append(item_to_compare)
         else:
             return "You already have no item equipped at the selected slot."
-        sCharacter.armor_equiped[slot_id] = item_to_equip
+        sCharacter.armor_equiped[slot_id] = item_to_equip.to_dbref()
     else:
         slot_id -= 3
         item_to_remove = sCharacter.weapons_equiped[slot_id]
@@ -278,8 +301,10 @@ def unequipItem(player, slot_id):
             inventory.append(item_id)
         else:
             return "You already have no item equipped at the selected slot."
-        sCharacter.weapons_equiped[slot_for_spellbook] = item_to_equip 
+        sCharacter.weapons_equiped[slot_for_spellbook] = item_to_equip.to_dbref()
     sCharacter = checkArmorSet(sCharacter)
-    sCharacter.inventory = inventory
+    sCharacter.inventory = turnListToDBREF(inventory)
+    sCharacter.instance_stack = turnListToDBREF(sCharacter.instance_stack)
     player.updateCurrentCharacter(sCharacter)
+    player.save()
     return "Successfully unequipped " +item_to_remove.name + " from "+ sCharacter.name + "\n"

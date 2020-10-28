@@ -297,7 +297,10 @@ class Profile(commands.Cog):
         if not await character.playabilityCheck(ctx, str(ctx.author.id)):
             return
         battler = db.Player.objects.get(battler_id = str(ctx.author.id))
-        
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        if isinstance(node, db.Battle):
+            return await ctx.send("You can't change your equipment during a battle.")
         if len(args) <1 or len(args) >2:
             return await ctx.send("Invalid number of arguments")
         item_index = int(args[0])
@@ -315,7 +318,10 @@ class Profile(commands.Cog):
         if not await character.playabilityCheck(ctx, str(ctx.author.id)):
             return
         battler = db.Player.objects.get(battler_id = str(ctx.author.id))
-        
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        if isinstance(node, db.Battle):
+            return await ctx.send("You can't change your equipment during a battle.")
         if len(args) !=1 :
             return await ctx.send("Invalid number of arguments")
         slot_index = int(args[0])
@@ -333,7 +339,7 @@ class Profile(commands.Cog):
         pCharac = battler.getCharacter()
         node = pCharac.getInstance()
         if node.guild_id != battler_id.guild_id:
-            return await ctx.send("Your currently active character is near your guild.")
+            return await ctx.send("Your currently active character is not near your guild.")
         if len(args) !=1 :
             return await ctx.send("Invalid number of arguments")
         slot_index = int(args[0])

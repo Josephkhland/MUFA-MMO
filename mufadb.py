@@ -152,6 +152,12 @@ class descendant(EmbeddedDocument):
     starting_karma = IntField( default =0)
     character_name = StringField(max_length = 20)
 
+class ArmorSet(Document):
+    name = StringField(max_length = 20)
+    two_items_set_bonus = ListField(IntField(), default = [0,0,0,0]) #Armor Set Bonus increase [Will, Vitality, Agility, Strength] while equipped.
+    full_set_bonus = ListField(IntField(), default = [0,0,0,0])
+
+
 class character(EmbeddedDocument):
     willpower = IntField(default = 1)
     vitality = IntField(default = 1)
@@ -219,6 +225,7 @@ class character(EmbeddedDocument):
         self.level+= 1
         self.experience = self.experience % self.exp_to_next_level
         self.exp_to_next_level = nextLevelEXP(self.level)
+        self.unused_points += 1
         self.checkLevel()
     
     def addCondition(self, condition):
@@ -340,10 +347,6 @@ class GhostBattler(Battler):
         return None
 
 
-class ArmorSet(Document):
-    name = StringField(max_length = 20)
-    two_items_set_bonus = ListField(IntField(), default = [0,0,0,0]) #Armor Set Bonus increase [Will, Vitality, Agility, Strength] while equipped.
-    full_set_bonus = ListField(IntField(), default = [0,0,0,0])
 
 class Spell(Document):
     name = StringField(max_length = 50)

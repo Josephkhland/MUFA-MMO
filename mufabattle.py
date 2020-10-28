@@ -247,19 +247,20 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
             damage_reduction_f += armor.physical_damage_reduction_f
             damage_reduction_p += armor.physical_damage_reduction_p
     for condition in range(15):
+        condition_chances.append(0)
+        thorn_condition_chances.append(0)
+        thorn_condition_durations.append(0)
         condition_chances[condition] = weapon.on_hit_condition_inflict_chance[condition]
-        condition_chances[condition] -= target.condition_resistances[condition] +getBuff(target,db.Buffs(condition-9).name)
+        condition_chances[condition] -= target.condition_resistances[condition] +getBuff(target,db.Buffs(condition+9).name)
         condition_chances[condition] = max(0,condition_chances[condition])
-        thorn_condition_chances[condition] = 0
-        thorn_condition_durations[condition] = 0
         for target_armor in target.armor_equiped:
             if isinstance(target_armor, db.Armor):
                 thorn_condition_chances[condition] += target_armor.thorn_condition_inflict_chance[condition]
                 thorn_condition_durations[condition] += target_armor.thorn_condition_duration[condition]
-        thorn_condition_chances[condition] -= attacker.condition_resistances[condition] +getBuff(attacker,db.Buffs(condition-9).name)
+        thorn_condition_chances[condition] -= attacker.condition_resistances[condition] +getBuff(attacker,db.Buffs(condition+9).name)
         thorn_condition_chances[condition] = max (0, thorn_condition_chances[condition]) 
     for hit in range(number_of_hits):
-        damage += weapon.damage_base + calculate_number_of_successes(amp_chance)*damage_per_amp
+        damage = weapon.damage_base + calculate_number_of_successes(amp_chance)*damage_per_amp
         damage = math.ceil(damage(100 + getBuff(attacker,"DAMAGE_UP"))/100)
         for i in range(15):
             if calculate_number_of_successes(condition_chances[i]) >= 1 :

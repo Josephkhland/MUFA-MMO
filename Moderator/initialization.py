@@ -55,7 +55,15 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
          if user in moderators_list:
             mufa_world.generate()
             mufa_world.insert_guild(str(guild.id),guild.name)
+            mufa_world.createDemoArmorSet()
             mufa_world.createNullObject()
+            for i in range(7):
+                if i<3:
+                    mufa_world.createDemoArmor(i)
+                if i >=3:
+                    mufa_world.createDemoWeapon(i-3)
+            guildhub = db.GuildHub.objects.get(guild_id = str(ctx.guild.id))
+            mufa_world.demoItemsGuild(guildhub)
     
     @commands.command(name='moderator_monster')
     async def mod_mon_summon(self,ctx, *args):

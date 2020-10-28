@@ -63,8 +63,11 @@ class Interaction(commands.Cog):
         battler = db.Player.objects.get(battler_id = str(ctx.author.id))
         pCharac = battler.getCharacter()
         node = pCharac.getInstance()
-        if node.guild_id != str(ctx.guild.id):
-            return await ctx.send("Your currently active character is not in this Guild's location.")
+        try:
+            if node.guild_id != str(ctx.guild.id):
+                return await ctx.send("Your currently active character is not in this Guild's location.")
+        except:
+            return await ctx.send("You can't purchase items in this instance.")
         if len(args) != 1 :
             return await ctx.send("Invalid number of arguments!")
         guildplace = db.GuildHub.objects.get(guild_id = str(ctx.guild.id))
@@ -80,8 +83,11 @@ class Interaction(commands.Cog):
         battler = db.Player.objects.get(battler_id = str(ctx.author.id))
         pCharac = battler.getCharacter()
         node = pCharac.getInstance()
-        if node.guild_id != str(ctx.guild.id):
-            return await ctx.send("Your currently active character is not in this Guild's location.")
+        try:
+            if node.guild_id != str(ctx.guild.id):
+                return await ctx.send("Your currently active character is not in this Guild's location.")
+        except:
+            return await ctx.send("You can't purchase items in this instance.")
         if len(args) != 1 :
             return await ctx.send("Invalid number of arguments!")
         return await ctx.send(mim.sellItem(battler, int(args[0])))

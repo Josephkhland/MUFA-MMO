@@ -5,6 +5,7 @@ import mufadisplay as mdisplay
 import character
 import datetime
 import discord
+import asyncio
 from discord.ext import commands
 
 class GuildActions(commands.Cog):
@@ -49,6 +50,8 @@ class GuildActions(commands.Cog):
         if len(battler.characters_list) == 0:
             return await ctx.send("You don't have an active character.")
         pCharac = battler.getCharacter()
+        if isinstance(pCharac.getInstance(), db.Battler):
+            return await ctx.send("You can't access the shop while in a battle.")
         if pCharac.is_dead:
             return await ctx.send("You can't use the shop with a dead character.")
         guild = db.GuildHub.objects.get(guild_id = str(ctx.guild.id))
@@ -88,7 +91,7 @@ class GuildActions(commands.Cog):
                         c_t = (c_t-1) 
                         if c_t <0: 
                             c_t = totalTabs -1
-                    msg.edit(embed = embedList[c_t])
+                    await msg.edit(embed = embedList[c_t])
                 except asyncio.TimeoutError:
                     await msg.add_reaction('💤')
                     loop = False
