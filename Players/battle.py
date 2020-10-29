@@ -30,7 +30,10 @@ class Battle_Commands(commands.Cog):
             return await ctx.send("There is no such target in this Instance.")
         message_to_display =mb.attack(battler,targetted_monster, targetted_monster.getCharacterInNode(node.node_id).name, 0)
         print(message_to_display)
-        await ctx.send("YOU DID A VERY POWERFUL ATTACK!")
+        final_message = "__**Battle Details**__\n" 
+        for mes in message_to_display:
+            final_message += mes + "\n"
+        await ctx.send(final_message)
         
     @commands.command(name='enemies')
     async def show_enemies(self, ctx, *args):

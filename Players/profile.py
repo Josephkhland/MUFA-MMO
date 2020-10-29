@@ -212,7 +212,7 @@ class Profile(commands.Cog):
             message_to_send = "Goodbye forever: **"+temp+"**."
         await ctx.send(message_to_send)
     
-    @commands.command(name='inventory')
+    @commands.command(name='myinventory', aliases = ['inventory', 'inv', 'i'])
     async def show_inventory(self, ctx, *args):
         """
             Shows your inventory

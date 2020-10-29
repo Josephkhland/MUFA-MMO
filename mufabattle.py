@@ -176,7 +176,64 @@ def deal_damage(charac, damage, information_message):
         charac.kill()
         information_message.append(charac.name + " is now DEAD!")
     return charac
-    
+
+def checkVictory_PvE(node):
+    information_message = []
+    monster_members = []
+    player_members = []
+    dead_monsters = []
+    dead_players = []
+    alive_monsters = []
+    alive_players = []
+    for member in node.members:
+        if member.faction == 1:
+            monster_members.append(member)
+            if member.character_stats.is_dead:
+                dead_monsters.append(member)
+            else:
+                alive_monsters.append(member)
+        else:
+            player_members.append(member)
+            ch = member.getCharacterInNode(node.node_id)
+            if ch.is_dead:
+                dead_players.append(member)
+            else:
+                alive_players.append(member)
+    print(player_members)
+    print("vs")
+    print(dead_players)
+    if len(player_members) == len(dead_players):
+        #Should toss characters to the instance they came from before closing instance, powering up the surviving monsters and putting them all back.
+        for pl in player_members:
+            mw.remove_character_from_node(pl.battler_id, node.node_id)
+        for mon in alive_monsters:
+            mw.remove_character_from_node(mon.battler_id, node.node_id)
+            #Add function for making monsters more powerful later on:
+        
+        #Return Defeat Message
+        information_message.append("DEFEAT")
+        return information_message
+        
+    if len(monster_members) == len(dead_monsters):
+        #Monsters are all dead- time to distribute loot to surviving players.
+        
+        #Distribute Loot
+        for i in node.loot :
+            p_to_give = random.randint(0,len(alive_players)-1)
+            alive_players[p_to_give].items_stored.append(i)
+            alive_players[p_to_give].items_stored = mim.turnListToDBREF(alive_players[p_to_give].items_stored)
+            alive_players[p_to_give].save()
+            information_message.append(alive_players[p_to_give].name + " looted a " + i.name + ". All loot is directly warped to Player Storage.")
+        #Remove players from Instance 
+        for pl in player_members:
+            mw.remove_character_from_node(pl.battler_id, node.node_id)
+        
+        #Return Victory Message
+        information_message.append("VICTORY")
+        return information_message
+    information_message.append("The battle continues...")
+    return information_message
+
 def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction= False, reaction_to=0):
     should_react = not reaction
     information_message = []
@@ -189,6 +246,7 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
         information_message.append("ERROR: Can't find attack target!")
         return information_message
     attacker = battler_attacker.getCharacter()
+    node = attacker.getInstance()
     weapon = attacker.weapons_equiped[attack_type]
     if not isinstance(weapon, db.Weapon):
         information_message.append("ERROR: Can't perform this attack without equipping a weapon")
@@ -336,6 +394,8 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
     
     
     if should_react == False:
+        if isinstance(node, db.Battle):
+            return information_message + checkVictory_PvE(node)
         return information_message
     else:
         if attack_type == 3:

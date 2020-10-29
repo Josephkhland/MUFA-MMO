@@ -35,6 +35,7 @@ class Interaction(commands.Cog):
             return await ctx.send("An unexpected error has occured.")
         mb.create(monster.battler_id, 1,battler)
         mb.battle_add_member(monster.battler_id, monster)
+        print(battler)
         embed = mb.battle_add_member(monster.battler_id, battler)
         await ctx.send(embed = embed)
     

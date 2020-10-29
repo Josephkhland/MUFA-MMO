@@ -3,6 +3,7 @@ import random
 import mongoengine
 import mufadb as db 
 import mufa_constants as mconst
+import mufa_item_management as mim
 import discord
 import datetime
 import time 
@@ -183,6 +184,44 @@ def node_return_upper(battler_id):
     current_node.save()
     return node_information(current_node)
 
+def savePlayer(player):
+    player.items_stored = mim.turnListToDBREF(player.items_stored)
+    
+    for c in player.characters_list:
+        c.weapons_equiped =  mim.turnListToDBREF(c.weapons_equiped)
+        c.armor_equiped = mim.turnListToDBREF(c.armor_equiped)
+        c.inventory = mim.turnListToDBREF(c.inventory)
+        c.instance_stack=  mim.turnListToDBREF(c.instance_stack)
+        if c.armor_set != None:
+            c.armor_set = c.armor_set.to_dbref()
+    
+    player.save()
+
+def remove_character_from_node(battler_id, node_id):
+    battler = db.Battler.objects.get(battler_id = battler_id)
+    pCharac = battler.getCharacterInNode(node_id)
+    this_node =pCharac.exitInstance()
+    next_node = pCharac.getInstance()
+    
+    try:
+        this_node.members.remove(battler.to_dbref())
+        counter = 0
+        for mn in this_node.members:
+            this_node.members[counter] = mn.to_dbref()
+            counter += 1
+        this_node.save()
+    except:
+        print("Battler wasn't found in node list. He couldn't be removed")
+    counter = 0
+    for nmem in next_node.members:
+        next_node.members[counter] = nmem.to_dbref()
+        counter += 1
+    next_node.members.append(battler.to_dbref())
+    
+    next_node.save()
+    battler.updateCharacterByName(pCharac)
+    savePlayer(battler)
+
 def getGuildNode(guild_id):
     return db.WorldNode.objects.get(guild_id = guild_id).node_id
 
@@ -223,7 +262,7 @@ def createDemoWeapon(weapon_type):
     db.Weapon(item_id = generateItemID(),
             name = "Demo "+wt, 
             item_type = weapon_type+3,
-            precision_scale = 10,
+            precision_scale = 50,
             damage_amp_scale = 5,
             damage_per_amp = 2,
             damage_base = 3).save()
