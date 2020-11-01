@@ -11,9 +11,10 @@ Using Discord.py
 * Command for Joining PvE Battle instances
 * Command for Creating PvP Battle instances.
 * Command for Joining PvP Battle instances.
-* Spells
+* Command for Showing Available Descendant Options.
 * Command for Leveling Up.
 * Interval Operations (Recovering Health, Energy, Sanity and checking for conditions that should be removed, Enemies that should be deleted)
+* Spells -> Design and Implement
 * Monsters Behaviour System -> Design & Implement.
 * Resources Collection System -> Design & Implement
 * Create Weapons Content for the Alpha Testing
