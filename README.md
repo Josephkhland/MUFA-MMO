@@ -7,18 +7,25 @@ Using Discord.py
 (Information for setting up the project is not included)
 
 ## 📖 List of Tasks 📖
-* ~~File hierarchy should be more organized.~~ -> Getting Worked.
-* ~~bot.py should get rewritten based on this [reference](https://gist.github.com/EvieePy/d78c061a4798ae81be9825468fe146be), having separated kinds of commands in different files.~~ ✅
-* ~~Commands for Controlling the player Character.~~ -> Complete.
-* Commands for interacting with menus and monitoring activity in the game. (Inventory, Available Actions, Profiles)
-* ~~Commands for interacting with game components and changing instances.~~ -> Changing instances Completed.
-* Commands for Dungeon instances.
-* Commands for battle instances.
-* ~~Functions for Battle Calculation (Attack, Defence, Reactions, Spells, Loot)~~ -> Under development
-* ~~Switching between available characters~~ -> Complete.
-* Content: Weapons, Armours, Monsters, Dungeons, Quests, Events.
-* Behaviours for Monsters.
-* Monsters, Dungeons and Events Generation.
-* I suppose this task list would need to be set up again, with more specific tasks
+* Commands for Configuring Battle Settings (PvE Players limit, Open? Password-protected?)
+* Command for Joining PvE Battle instances
+* Command for Creating PvP Battle instances.
+* Command for Joining PvP Battle instances.
+* Command for Showing Available Descendant Options.
+* Command for Leveling Up.
+* Interval Operations (Recovering Health, Energy, Sanity and checking for conditions that should be removed, Enemies that should be deleted)
+* Spells -> Design and Implement
+* Monsters Behaviour System -> Design & Implement.
+* Resources Collection System -> Design & Implement
+* Create Weapons Content for the Alpha Testing
+* Create Armours Content for the Alpha Testing
+* Create Monsters Content for the Alpha Testing
+* Create Dungeon Content for the Alpha Testing
+* Implement Time-based system for spawning Monsters and Dungeons in the World Map.
+* Write down a documentation for the Players based on current functionalities.
+* __At this point it will be viable to test the game in the form of an Alpha Test.__
+* Resolve issues that show up while testing the game 
+* Adjust Plans based on Feedback to the Alpha
+* If the project is meant to be continued: Create secondary application for fastly creating Weapons, Armours, Monsters and Dungeons and adding them to the game's database.
 
 # 💀 Life is Temporary, MUFA is eternal 💀
