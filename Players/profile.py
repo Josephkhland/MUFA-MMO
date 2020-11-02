@@ -351,6 +351,55 @@ class Profile(commands.Cog):
         battler.save()
         return
 
+    @commands.command(name='set_pve_password')
+    async def set_pve_password(self,ctx, *args):
+        """If you wish for your PvE Sessions to be password protected, use this
+           Command in order to create a password.
+        """
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if len(args) == 0:
+            return await ctx.send("This command requires at least one argument")
+        if len(args[0]) < 6:
+            return await ctx.send("If you wish to set a new password it needs to be at least 6 Characters.")
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.no_dereference().get(battler_id = playerID)
+        battler.pve_join_password = args[0]
+        battler.save()
+        await ctx.send("You have successfully created a password for your PvE Sessions")
+        return
+    
+    @commands.command(name='remove_pve_password')
+    async def remove_pve_password(self,ctx, *args):
+        """Use this if you have created a password for your PvE sessions, and you wish to make them public once again.
+        """
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.no_dereference().get(battler_id = playerID)
+        battler.pve_join_password = None
+        battler.save()
+        await ctx.send("You have successfully turned your PvE Sessions Public.")
+        return
+    
+    @commands.command(name='set_party_limit')
+    async def set_party(self,ctx, *args):
+        """Use this to determine the maximum number of players in your party for Battle instances and Dungeons.
+        """
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if len(args) == 0:
+            return await ctx.send("This command requires at least one argument")
+        if int(args[0]) < 1:
+            return await ctx.send("Party size limit can't be less than 1")
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.no_dereference().get(battler_id = playerID)
+        battler.pve_player_limit = int(args[0])
+        battler.save()
+        await ctx.send("You have successfully changed your Party Limit.")
+        return
+        
 # The setup fucntion below is neccesarry. Remember we give bot.add_cog() the name of the class in this case MembersCog.
 # When we load the cog, we use the name of the file.
 def setup(bot):

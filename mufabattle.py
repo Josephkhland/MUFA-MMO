@@ -17,7 +17,7 @@ def log_entry(battler_obj, description):
 def create(id_to_give, players_limit, initiator):
     log_message = "Created Battle Instance("+id_to_give+")"
     log_zero = log_entry(initiator, log_message)
-    db.Battle(node_id = id_to_give, player_limit = players_limit, actions_log = [log_zero]).save()
+    db.Battle(node_id = id_to_give, player_limit = players_limit, join_password = initiator.pve_join_password, actions_log = [log_zero]).save()
     
 def battle_add_member(node_id, battler):
     log_message = battler.name + "("+ battler.battler_id+") has joined the battle!"

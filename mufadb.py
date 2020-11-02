@@ -296,6 +296,8 @@ class Player(Battler):
     guild_id = StringField(max_length = 20)
     last_action_date = DateTimeField()
     faction = IntField(default = 0)
+    pve_player_limit = IntField(default = 1)
+    pve_join_password = StringField() 
     
     def getCharacter(self):
         return self.characters_list[self.active_character]
@@ -407,6 +409,7 @@ class Battle(Node):
     money_loot = IntField(default = 0)
     actions_log = EmbeddedDocumentListField(battlelog)
     player_limit = IntField(default = 1)
+    join_password = StringField()
     meta = {'allow_inheritance': True}
 
     def getMember_not_in_faction(self, mid, faction):
