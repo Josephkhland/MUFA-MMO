@@ -117,7 +117,19 @@ class Interaction(commands.Cog):
             return await ctx.send("You can't join this battle from your current location")
         if len(pve_instance.members) >= pve_instance.player_limit:
             return await ctx.send("This battle instance is full.")    
-        embed = mb.battle_add_member(args[0], battler)
+        try:
+            if pve_instance.join_password != None:
+                if len(args) <2:
+                    return await ctx.send("This PvE Session requires a password")
+                else:
+                    if pve_instance.join_password == args[1]:
+                        embed = mb.battle_add_member(args[0], battler)
+                    else:
+                        return await ctx.send("The password you have added is not valid for this Instance.")
+            else:
+                embed = mb.battle_add_member(args[0], battler)
+        except:
+            embed = mb.battle_add_member(args[0], battler)
         await ctx.send(embed = embed)
         
         

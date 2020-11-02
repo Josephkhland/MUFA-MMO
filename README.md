@@ -7,8 +7,8 @@ Using Discord.py
 (Information for setting up the project is not included)
 
 ## 📖 List of Tasks 📖
-* Commands for Configuring Battle Settings (PvE Players limit, Open? Password-protected?)
-* Command for Joining PvE Battle instances
+* ~~Commands for Configuring Battle Settings (PvE Players limit, Open? Password-protected?)~~ -> Completed (not Tested)
+* ~~Command for Joining PvE Battle instances~~ -> Completed (not Tested)
 * Command for Creating PvP Battle instances.
 * Command for Joining PvP Battle instances.
 * Command for Showing Available Descendant Options.
