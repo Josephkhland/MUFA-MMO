@@ -212,6 +212,49 @@ class Profile(commands.Cog):
             message_to_send = "Goodbye forever: **"+temp+"**."
         await ctx.send(message_to_send)
     
+    @commands.command(name='mydescendants', aliases = ['descendants', 'character_options'])
+    async def show_descendants(self, ctx, *args):
+        """
+            Shows your available descendants. 
+        """
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.get(battler_id = playerID)
+        embedList = mdisplay.displayDescendants(battler)
+        totalTabs = len(embedList)
+        c_t = 0
+        if len(embedList) == 0 : 
+            return await ctx.send("You have no items in your inventory!")
+        msg = await ctx.send(embed = embedList[0])
+        if totalTabs > 1:
+            loop = True
+            previous_tab = '◀️'
+            next_tab = '▶️'
+            await msg.add_reaction(previous_tab)
+            await msg.add_reaction(next_tab)
+            def reaction_filter(reaction, user):
+                return str(user.id) == str(ctx.author.id) and str(reaction.emoji) in [previous_tab,next_tab]
+            while loop:
+                try:
+                    pending_collectors =[self.bot.wait_for('reaction_add', timeout=5, check = reaction_filter),
+                                         self.bot.wait_for('reaction_remove', timeout=5, check = reaction_filter)]                  
+                    done_collectors, pending_collectors = await asyncio.wait(pending_collectors, return_when=asyncio.FIRST_COMPLETED)
+                    for collector in pending_collectors:
+                        collector.cancel()
+                    for collector in done_collectors:
+                        reaction, user = await collector
+                    if reaction.emoji == next_tab:
+                        c_t = (c_t+1) % totalTabs
+                    elif reaction.emoji == previous_tab:
+                        c_t = (c_t-1) 
+                        if c_t <0: 
+                            c_t = totalTabs -1
+                    msg.edit(embed = embedList[c_t])
+                except asyncio.TimeoutError:
+                    await msg.add_reaction('💤')
+                    loop = False
+    
     @commands.command(name='myinventory', aliases = ['inventory', 'inv', 'i'])
     async def show_inventory(self, ctx, *args):
         """

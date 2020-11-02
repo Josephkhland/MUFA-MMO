@@ -238,3 +238,40 @@ def displayShopList(guild, analytic= False):
         if counter == len(guild.shop):
             embedList.append(embed)
     return embedList
+    
+def displayDescendants(battler):
+    embedList = []
+    counter = 0
+    tab_size = 3 
+    current_tab = 0
+    total_tabs = math.ceil(len(battler.descendant_options)/tab_size)
+    for dso in battler.descendant_options:
+        if counter >= current_tab*tab_size:
+            if counter != 0: embedList.append(embed)
+            current_tab += 1
+            embed = discord.Embed(
+                title = "Descendants Options",
+                description = "When spawning a new character, use the index of the option you wish to select",
+                colour = discord.Colour.red()
+                )
+            embed.set_footer(text="Tab "+str(current_tab)+"/"+str(total_tabs))
+        desc_name = ""
+        try:
+            if dso.character_name == None:
+                desc_name = "Default option"
+            else:
+               desc_name = dso.character_name
+        except:
+            desc_name = "Default option"
+        name_string = str(counter)+": "+desc_name 
+        
+        str_so_far = "Starting Willpower: `"+str(dso.will_bonus)+"`\n"
+        str_so_far += "Starting Vitality: `"+str(dso.vitality_bonus)+"`\n"
+        str_so_far += "Starting Agility: `"+str(dso.agility_bonus)+"`\n"
+        str_so_far += "Starting Strength: `" +str(dso.strength_bonus)+"`\n"
+        str_so_far += "Starting Karma: `" + str(dso.starting_karma)+"`\n"
+        embed.add_field(name = name_string , value = str_so_far , inline = False)
+        counter += 1
+        if counter == len(battler.descendant_options):
+            embedList.append(embed)
+    return embedList
