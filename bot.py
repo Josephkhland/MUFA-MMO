@@ -7,6 +7,7 @@ import mufa_world
 import datetime
 import character
 import discord
+import mufaintervals
 from dotenv import load_dotenv
 from pathlib import Path  # Python 3.6+ only
 env_path = Path('.') / '.env'
@@ -50,6 +51,7 @@ async def on_ready():
     
      # Changes our bots Playing Status. type=1(streaming) for a standard game you could remove type and url.
     await bot.change_presence(activity=discord.Game(name="Multiple Unidentified Futures Anthem"))
+    mufaintervals.update()
     print(f'Successfully logged in and booted...!')
     
 @bot.event

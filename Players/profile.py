@@ -6,6 +6,7 @@ import mufa_item_management as mim
 import character
 import datetime
 import discord
+import asyncio
 from discord.ext import commands
 
 class Profile(commands.Cog):
@@ -301,7 +302,84 @@ class Profile(commands.Cog):
                 except asyncio.TimeoutError:
                     await msg.add_reaction('💤')
                     loop = False
-
+    
+    @commands.command(name='upgrade', aliases = ['level_up'])
+    async def upgrade_character(self, ctx, *args):
+        """
+            Use this command in order to use any unspent points you've earned from leveling up.
+        """
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        playerID = str(ctx.author.id)
+        battler = db.Player.objects.no_dereference().get(battler_id = playerID)
+        if len(battler.characters_list) == 0:
+            return await ctx.send("You don't have an active character")
+        pCharac = battler.getCharacter()
+        embed = mdisplay.display_level_up_details(pCharac)
+        msg = await ctx.send(embed= embed)
+        willpower_emoji = "🧠"
+        vitality_emoji = "💟"
+        agility_emoji = "👟"
+        strength_emoji = "💪"
+        success_emoji = "✅"
+        cancel_emoji = "❎"
+        loop = True 
+        used_emojis = [success_emoji,cancel_emoji]
+        if pCharac.willpower <= pCharac.unused_points:
+            await msg.add_reaction(willpower_emoji)
+            used_emojis.append(willpower_emoji)
+        if pCharac.vitality <= pCharac.unused_points: 
+            await msg.add_reaction(vitality_emoji)
+            used_emojis.append(vitality_emoji)
+        if pCharac.agility <= pCharac.unused_points:
+            await msg.add_reaction(agility_emoji)
+            used_emojis.append(agility_emoji)
+        if pCharac.strength <= pCharac.unused_points:
+            await msg.add_reaction(strength_emoji)
+            used_emojis.append(strength_emoji)
+        await msg.add_reaction(success_emoji)
+        await msg.add_reaction(cancel_emoji)
+        def reaction_filter(reaction, user):
+                return str(user.id) == str(ctx.author.id) and str(reaction.emoji) in used_emojis
+        
+        while loop:
+                try:
+                    pending_collectors =[self.bot.wait_for('reaction_add', timeout=5, check = reaction_filter),
+                                         self.bot.wait_for('reaction_remove', timeout=5, check = reaction_filter)]                  
+                    done_collectors, pending_collectors = await asyncio.wait(pending_collectors, return_when=asyncio.FIRST_COMPLETED)
+                    for collector in pending_collectors:
+                        collector.cancel()
+                    for collector in done_collectors:
+                        reaction, user = await collector
+                    if reaction.emoji == willpower_emoji:
+                        if pCharac.willpower <= pCharac.unused_points:
+                            pCharac.unused_points -= pCharac.willpower
+                            pCharac.willpower += 1   
+                    elif reaction.emoji == vitality_emoji:
+                        if pCharac.vitality <= pCharac.unused_points:
+                            pCharac.unused_points -= pCharac.vitality
+                            pCharac.vitality += 1
+                    elif reaction.emoji == agility_emoji:
+                        if pCharac.agility <= pCharac.unused_points:
+                            pCharac.unused_points -= pCharac.agility
+                            pCharac.agility += 1
+                    elif reaction.emoji == strength_emoji:
+                        if pCharac.strength <= pCharac.unused_points:
+                            pCharac.unused_points -= pCharac.strength
+                            pCharac.strength += 1
+                    elif reaction.emoji == success_emoji:
+                        battler.updateCharacterByName(pCharac.name)
+                        battler.save()
+                        await msg.add_reaction('💤')
+                        loop = False
+                    elif reaction.emoji == cancel_emoji:
+                        await msg.add_reaction('💤')
+                        loop = False
+                    msg.edit(embed = mdisplay(display_level_up_details(pCharac)))
+                except asyncio.TimeoutError:
+                    await msg.add_reaction('💤')
+                    loop = False
+        
     @commands.command(name='migrate')
     @commands.guild_only()
     async def migrate(self, ctx):

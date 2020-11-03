@@ -275,3 +275,17 @@ def displayDescendants(battler):
         if counter == len(battler.descendant_options):
             embedList.append(embed)
     return embedList
+    
+def display_level_up_details(characteru):
+    embed = discord.Embed(
+        title = characteru.name + " Upgrade Screen",
+        description = "You have `" + str(characteru.unused_points) + "` unused points left.",
+        colour = discord.Colour.red()
+        )
+    embed.set_footer(text="Upgrade using the Reactions below")
+    embed.add_field(name = ":brain: Willpower" , value = "Upgrade cost: "+ str(characteru.willpower), inline = False)
+    embed.add_field(name = ":heart_decoration: Vitality" , value = "Upgrade cost: "+ str(characteru.vitality), inline = False)
+    embed.add_field(name = ":athletic_shoe: Agility" , value = "Upgrade cost: "+ str(characteru.agility), inline = False)
+    embed.add_field(name = ":muscle: Strength" , value = "Upgrade cost: "+ str(characteru.strength), inline = False)
+    return embed   
+    
