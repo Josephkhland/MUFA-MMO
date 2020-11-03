@@ -234,6 +234,40 @@ def checkVictory_PvE(node):
     information_message.append("The battle continues...")
     return information_message
 
+def action_start(battler):
+    to_remove =[]
+    pCharac =battler.getCharacter()
+    for con in pCharac.conditions:
+        if con.duration == -1:
+            continue
+        if con.duration == 0: 
+            to_remove.append(c.name)
+        else:
+           con.duration -= 1
+    for cc in to_remove:
+        pCharac = remove_condition(pCharac, cc)
+    battler.updateCharacterByName(pCharac)
+    battler.save()
+    return pCharac
+    
+def action_end(battler, info_mes):
+    pCharac = battler.getCharacter()
+    pCharac.actions_left -=1
+    end_turn_damage = 0
+    if has_condition(pCharac, "POISONED"):
+        end_turn_damage += 1
+        info_mes.append(pCharac.name + " lost 1 Health due to being POISONED!")
+    if has_condition(pCharac, "BURNING"):
+        end_turn_damage += 5
+        info_mes.append(pCharac.name + " lost 5 Health due to BURNING!")
+    if has_condition(pCharac, "BLEEDING"): 
+        end_turn_damage += 1 
+        info_mes.append(pCharac.name + " lost 1 Health due to BLEEDING!")
+    pCharac = deal_damage(pCharac, end_turn_damage, info_mes)
+    battler.updateCharacterByName(pCharac)
+    battler.save()
+    return info_mes
+    
 def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction= False, reaction_to=0):
     should_react = not reaction
     information_message = []
@@ -245,7 +279,7 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
     if target == None :
         information_message.append("ERROR: Can't find attack target!")
         return information_message
-    attacker = battler_attacker.getCharacter()
+    attacker = action_start(battler_attacker)
     node = attacker.getInstance()
     weapon = attacker.weapons_equiped[attack_type]
     if not isinstance(weapon, db.Weapon):
@@ -372,6 +406,8 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
     battler_target.updateCurrentCharacter(target)
     battler_attacker.save()
     battler_target.save()
+    
+    information_message = action_end(battler_attacker, information_message)
     
     #Proceed with reaction
     if attacker.is_dead:
