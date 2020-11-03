@@ -12,8 +12,8 @@ class Battle_Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(name='attack')
-    async def attack_target(self, ctx, *args):
+    @commands.command(name='slash')
+    async def slash_target(self, ctx, *args):
         if not character.checkRegistration(str(ctx.author.id)):
             return await ctx.send("You are not registered. Please register by using the command `!register`")
         if not await character.playabilityCheck(ctx, str(ctx.author.id)):
@@ -34,7 +34,76 @@ class Battle_Commands(commands.Cog):
         for mes in message_to_display:
             final_message += mes + "\n"
         await ctx.send(final_message)
+    
+    @commands.command(name='pierce')
+    async def pierce_target(self, ctx, *args):
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        if len(args) == 0 or len(args) >1:
+            return await ctx.send("Invalid number of arguments.")
+        battler = db.Player.objects.get(battler_id = str(ctx.author.id))
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        if not isinstance(node, db.Battle): 
+            return await ctx.send("You can only use this command in a Battle.")
+        targetted_monster = node.getMember_not_in_faction(int(args[0]),battler.faction)
+        if targetted_monster == None:
+            return await ctx.send("There is no such target in this Instance.")
+        message_to_display =mb.attack(battler,targetted_monster, targetted_monster.getCharacterInNode(node.node_id).name, 1)
+        print(message_to_display)
+        final_message = "__**Battle Details**__\n" 
+        for mes in message_to_display:
+            final_message += mes + "\n"
+        await ctx.send(final_message)
+    
+    @commands.command(name='crash')
+    async def crash_target(self, ctx, *args):
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        if len(args) == 0 or len(args) >1:
+            return await ctx.send("Invalid number of arguments.")
+        battler = db.Player.objects.get(battler_id = str(ctx.author.id))
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        if not isinstance(node, db.Battle): 
+            return await ctx.send("You can only use this command in a Battle.")
+        targetted_monster = node.getMember_not_in_faction(int(args[0]),battler.faction)
+        if targetted_monster == None:
+            return await ctx.send("There is no such target in this Instance.")
+        message_to_display =mb.attack(battler,targetted_monster, targetted_monster.getCharacterInNode(node.node_id).name, 2)
+        print(message_to_display)
+        final_message = "__**Battle Details**__\n" 
+        for mes in message_to_display:
+            final_message += mes + "\n"
+        await ctx.send(final_message)
         
+    @commands.command(name='shoot')
+    async def shoot_target(self, ctx, *args):
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        if len(args) == 0 or len(args) >1:
+            return await ctx.send("Invalid number of arguments.")
+        battler = db.Player.objects.get(battler_id = str(ctx.author.id))
+        pCharac = battler.getCharacter()
+        node = pCharac.getInstance()
+        if not isinstance(node, db.Battle): 
+            return await ctx.send("You can only use this command in a Battle.")
+        targetted_monster = node.getMember_not_in_faction(int(args[0]),battler.faction)
+        if targetted_monster == None:
+            return await ctx.send("There is no such target in this Instance.")
+        message_to_display =mb.attack(battler,targetted_monster, targetted_monster.getCharacterInNode(node.node_id).name, 3)
+        print(message_to_display)
+        final_message = "__**Battle Details**__\n" 
+        for mes in message_to_display:
+            final_message += mes + "\n"
+        await ctx.send(final_message)
+    
     @commands.command(name='enemies')
     async def show_enemies(self, ctx, *args):
         if not character.checkRegistration(str(ctx.author.id)):
