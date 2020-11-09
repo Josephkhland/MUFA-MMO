@@ -9,8 +9,12 @@ connect('MUFAdatabase', host='localhost', port=27017)
 
 #Creates an array size 15 filled with zeros. Used later for initializations.
 array_zero_15 = []
+array_zero_24 = []
 for i in range(15):
     array_zero_15.append(0)
+
+for i in range(24):
+    array_zero_24.append(0)
 
 #Useful function:
 def nextLevelEXP(level):
@@ -352,16 +356,16 @@ class GhostBattler(Battler):
 
 class Spell(Document):
     name = StringField(max_length = 50)
-    sanity_cost = IntField()
+    sanity_cost = IntField(default = 0)
     spell_success_rate = IntField(default = 100)            #The success rate of the spell taking effect on a target.
     instance_type = IntField()                              #The instance this spell can be activated Free Roam: 0, Dungeon: 1, Battle: 2
     targets = IntField(default = 1)                         # Special Values: Self -> 0 , ONE_SIDE -> -1 , ALL -> -2
     damage = IntField(default = 0)                          #Negative for Healing.
-    on_success_buff_chance = ListField(IntField())
-    on_success_buff_duration = ListField (IntField())
+    on_success_buff_chance = ListField(IntField(), default = array_zero_24)
+    on_success_buff_duration = ListField (IntField(), default = array_zero_24)
     on_success_condition_inflict_chance = ListField(IntField(), default = array_zero_15)
     on_success_condition_duration = ListField(IntField(), default = array_zero_15)
-    on_success_force_exhaustion_damage = IntField()              #Deals damage directly to someone's actions left. (PvP-Only)
+    on_success_force_exhaustion_damage = IntField(default = 0)              #Deals damage directly to someone's actions left. (PvP-Only)
     actions_required = IntField(default = 1)                     #The number of actions required to use this spell.
     ingredients = ListField(ListField(IntField()), default = []) #List of Resources required in format List([resource_id, quantity])
 
@@ -433,4 +437,6 @@ class Dungeon(Node):
     treasure = ListField(Item)
     gold_loot = IntField()
 
+class Room(Dungeon):
+    lock = StringField(default = "NONE")
 

@@ -17,8 +17,8 @@ Using Discord.py
 * Spells -> Design and Implement
 * Monsters Behaviour System -> Design & Implement.
 * Resources Collection System -> Design & Implement
-* Create Weapons Content for the Alpha Testing
-* Create Armours Content for the Alpha Testing
+* ~~Create Weapons Content for the Alpha Testing~~ -> Done
+* ~~Create Armours Content for the Alpha Testing~~ -> Done
 * Create Monsters Content for the Alpha Testing
 * Create Dungeon Content for the Alpha Testing
 * Implement Time-based system for spawning Monsters and Dungeons in the World Map.

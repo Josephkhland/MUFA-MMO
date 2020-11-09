@@ -303,10 +303,6 @@ def attack(battler_attacker, battler_target, target_name, attack_type=0,reaction
     
     #Calculate Number of Hits 
     attacker_precision = attacker.precision_base + attacker.agility*weapon.precision_scale*AACM +getBuff(attacker,"PRECISION_UP")
-    if attack_type == 1 or attack_type ==3:
-        attacker_precision = math.ceil(attacker_precision/2)
-    if attack_type == 2:
-        attack_precision = math.ceil(attacker_precision/4)
     if has_condition(attacker,"BLINDED"): 
         attacker_precision = 10
     target_evasion = max(target.evasion_base + target.agility*TACM - total_AECR +getBuff(target,"EVASION_UP") , 10)
