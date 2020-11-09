@@ -1,6 +1,7 @@
 import mufadb as db
 import mufa_constants as mconst
 import mufa_world
+import basic_pack
 import discord
 from discord.ext import commands
 
@@ -64,6 +65,20 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
                     mufa_world.createDemoWeapon(i-3)
             guildhub = db.GuildHub.objects.get(guild_id = str(ctx.guild.id))
             mufa_world.demoItemsGuild(guildhub)
+    
+    @commands.command(name='import')
+    async def initialize(self, ctx, *args):
+         user = str(ctx.author.id)
+         guild = ctx.guild
+         if user in moderators_list:
+            if len(args) != 1 :
+                return await ctx.send("You must specify which pack you wish to import")
+            if args[0] == "basic":
+                if db.PackageNames.objects.get(name = "basic") == None:
+                    basic_pack.install_pack()
+                else:
+                    await ctx.send("`basic` pack already installed") 
+                    
     
     @commands.command(name='moderator_monster')
     async def mod_mon_summon(self,ctx, *args):

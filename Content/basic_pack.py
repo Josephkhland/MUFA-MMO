@@ -253,3 +253,4 @@ def install_pack():
     basic_weapons()
     basic_armor()
     basic_monsters()
+    db.PackageNames(name = "basic").save()

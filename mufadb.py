@@ -440,3 +440,5 @@ class Dungeon(Node):
 class Room(Dungeon):
     lock = StringField(default = "NONE")
 
+class PackageNames(Document):
+    name = StringField()
