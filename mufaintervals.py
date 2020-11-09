@@ -1,4 +1,5 @@
 import time, threading
+import math 
 import datetime
 import mufadb as db
 import mufabattle as mb
@@ -56,7 +57,12 @@ def solve_conditions(hourly= False, tworly = False):
                 pCharac.current_sanity = min(pCharac.willpower*10, math.ceil(pCharac.current_sanity+ (pCharac.willpower*0.1)))
             b.character_stats = pCharac
             b.save()
-    print("Completed Interval Update")
+    log_message = datetime.datetime.now().ctime() + " : Completed Interval Update"
+    if hourly: 
+        log_message += " | hourly == TRUE"
+    if tworly: 
+        log_message += " | tworly == TRUE"
+    print(log_message)
             
 class setInterval :
     def __init__(self,interval,action) :

@@ -29,3 +29,6 @@ Using Discord.py
 * If the project is meant to be continued: Create secondary application for fastly creating Weapons, Armours, Monsters and Dungeons and adding them to the game's database.
 
 # 💀 Life is Temporary, MUFA is eternal 💀
+
+If you desire to keep up with the project's development and discuss it with its creator, you join our 
+[Discord server](https://discord.gg/mBUQeMd)

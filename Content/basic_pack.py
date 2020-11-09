@@ -1,4 +1,5 @@
 import mufa_world as mw
+import mufadb as db
 def basic_weapons():
     db.Weapon(item_id = mw.generateItemID(),
             name = "Basic Sword", 
@@ -50,7 +51,7 @@ def basic_armor():
                 two_items_set_bonus = [1,0,0,0],
                 full_set_bonus = [2,0,0,0]).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Cultist's Hood",
             armor_set = db.ArmorSet.objects.get(name = "Cultist").to_dbref(),
             item_type = 0,
@@ -59,7 +60,7 @@ def basic_armor():
             physical_damage_reduction_p = 2,
             drop_chance = 10).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Cultist's Robes",
             armor_set = db.ArmorSet.objects.get(name = "Cultist").to_dbref(),
             item_type = 1,
@@ -68,7 +69,7 @@ def basic_armor():
             physical_damage_reduction_p = 2,
             drop_chance = 10).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Cultist's Boots",
             armor_set = db.ArmorSet.objects.get(name = "Cultist").to_dbref(),
             item_type = 2,
@@ -82,7 +83,7 @@ def basic_armor():
                 two_items_set_bonus = [0,1,0,0],
                 full_set_bonus = [0,2,0,0]).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Rook's Helmet",
             armor_set = db.ArmorSet.objects.get(name = "Rook").to_dbref(),
             item_type = 0,
@@ -91,7 +92,7 @@ def basic_armor():
             physical_damage_reduction_p = 2,
             drop_chance = 10).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Rook's Hide",
             armor_set = db.ArmorSet.objects.get(name = "Rook").to_dbref(),
             item_type = 1,
@@ -100,7 +101,7 @@ def basic_armor():
             physical_damage_reduction_p = 2,
             drop_chance = 10).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Rook's Boots",
             armor_set = db.ArmorSet.objects.get(name = "Rook").to_dbref(),
             item_type = 2,
@@ -115,7 +116,7 @@ def basic_armor():
                 two_items_set_bonus = [0,0,1,0],
                 full_set_bonus = [0,0,2,0]).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Acrobat's Cap",
             armor_set = db.ArmorSet.objects.get(name = "Acrobat").to_dbref(),
             item_type = 0,
@@ -124,7 +125,7 @@ def basic_armor():
             physical_damage_reduction_p = 2,
             drop_chance = 10).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Acrobat's Shirt",
             armor_set = db.ArmorSet.objects.get(name = "Acrobat").to_dbref(),
             item_type = 1,
@@ -133,7 +134,7 @@ def basic_armor():
             physical_damage_reduction_p = 2,
             drop_chance = 10).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Acrobat's Shoes",
             armor_set = db.ArmorSet.objects.get(name = "Acrobat").to_dbref(),
             item_type = 2,
@@ -147,7 +148,7 @@ def basic_armor():
                 two_items_set_bonus = [0,0,0,1],
                 full_set_bonus = [0,0,0,2]).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Brute's Helmet",
             armor_set = db.ArmorSet.objects.get(name = "Brute").to_dbref(),
             item_type = 0,
@@ -156,7 +157,7 @@ def basic_armor():
             physical_damage_reduction_p = 2,
             drop_chance = 10).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Brute's Armour",
             armor_set = db.ArmorSet.objects.get(name = "Brute").to_dbref(),
             item_type = 1,
@@ -165,7 +166,7 @@ def basic_armor():
             physical_damage_reduction_p = 2,
             drop_chance = 10).save()
     
-    db.Armor(item_id = generateItemID(),
+    db.Armor(item_id = mw.generateItemID(),
             name = "Brute's Boots",
             armor_set = db.ArmorSet.objects.get(name = "Brute").to_dbref(),
             item_type = 2,
@@ -237,10 +238,10 @@ def basic_monsters():
 
 def basic_dungeon():
     db.Dungeon(node_id = "BDGL0000",
-               entrance_message = "You are standing at the entrance of a dark cavern, it's overall pretty dark, making it hard to see. The wind blowing from the north, carries a stinking smell of goblin waste."
+               entrance_message = "You are standing at the entrance of a dark cavern, it's overall pretty dark, making it hard to see. The wind blowing from the north, carries a stinking smell of goblin waste.",
                name = "Goblin Lair",
                gold_loot = 50,
-               north_exit = "BDGL0100).save()
+               north_exit = "BDGL0100").save()
     db.Room(node_id = "BDGL0100",
             name = "Goblin Lair - Room 1",
             entrance_message = "It's so dark that it's hard to see",
@@ -253,4 +254,5 @@ def install_pack():
     basic_weapons()
     basic_armor()
     basic_monsters()
+    basic_dungeon()
     db.PackageNames(name = "basic").save()
