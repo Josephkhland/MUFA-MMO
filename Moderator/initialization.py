@@ -1,6 +1,7 @@
 import mufadb as db
 import mufa_constants as mconst
 import mufa_world
+import mufagenerator as mg 
 import Content.basic_pack as basic_pack
 import discord
 from discord.ext import commands

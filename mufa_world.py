@@ -239,7 +239,7 @@ def generateMonsterID():
     day = date.strftime("%d")
     month = date.strftime("%m")
     year = date.strftime("%y")
-    return "MON"+str(day)+str(month)+str(year)+num.zfill(5)
+    return "MON"+str(day)+str(month)+str(year)+num.zfill(4)
     
 def generateItemID():
     return len(db.Item.objects)

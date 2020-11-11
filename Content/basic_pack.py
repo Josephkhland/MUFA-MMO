@@ -195,8 +195,7 @@ def basic_monsters():
                           weapons_equiped = [weapon_slash,null_obj,null_obj,null_obj],
                           instance_stack = []
                           )
-    new_id = mw.generateMonsterID()
-    db.Monster(battler_id = new_id, name =n_char.name ,character_stats=n_char).save()
+    db.MonsterEntry(character_stats=n_char).save()
     
     helmet = db.Armor.objects.get(name = "Acrobat's Cap").to_dbref()
     chestpiece = db.Armor.objects.get(name = "Acrobat's Shirt").to_dbref()
@@ -213,8 +212,7 @@ def basic_monsters():
                           weapons_equiped = [weapon_slash,null_obj,null_obj,null_obj],
                           instance_stack = []
                           )
-    new_id = mw.generateMonsterID()
-    db.Monster(battler_id = new_id, name =n_char.name ,character_stats=n_char).save()
+    db.MonsterEntry(character_stats=n_char).save()
     
     helmet = db.Armor.objects.get(name = "Brute's Helmet").to_dbref()
     chestpiece = db.Armor.objects.get(name = "Brute's Armour").to_dbref()
@@ -231,19 +229,25 @@ def basic_monsters():
                           weapons_equiped = [weapon_slash,null_obj,null_obj,null_obj],
                           instance_stack = []
                           )
-    new_id = mw.generateMonsterID()
-    db.Monster(battler_id = new_id, name =n_char.name ,character_stats=n_char).save()
+    db.MonsterEntry(character_stats=n_char).save()
     
     print("Basic Monsters Pack Installed Successfully")
 
 def basic_dungeon():
+    db.DungeonEntry(name = "Goblin Lair",
+                    max_monsters = 10,
+                    average_number_of_rooms = 15,
+                    monsters_list = ["Goblin Rook", "Goblin Scout", "Goblin Brute"]).save()
+                    
     db.Dungeon(node_id = "BDGL0000",
                entrance_message = "You are standing at the entrance of a dark cavern, it's overall pretty dark, making it hard to see. The wind blowing from the north, carries a stinking smell of goblin waste.",
-               name = "Goblin Lair",
+               name = "Goblin Lair - Entrance",
+               d_name = "Goblin Lair",
                gold_loot = 50,
                north_exit = "BDGL0100").save()
-    db.Room(node_id = "BDGL0100",
+    db.Dungeon(node_id = "BDGL0100",
             name = "Goblin Lair - Room 1",
+            d_name = "Goblin Lair",
             entrance_message = "It's so dark that it's hard to see",
             gold_loot = 50,
             south_exit = "BDGL0000").save()

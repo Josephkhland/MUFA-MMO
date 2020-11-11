@@ -352,6 +352,8 @@ class GhostBattler(Battler):
     def getCharacter(self):
         return None
 
+class MonsterEntry(Document):
+    character_stats = EmbeddedDocumentField(character)
 
 
 class Spell(Document):
@@ -432,13 +434,55 @@ class Battle(Node):
                 enemies.append(member)
         return enemies
     
+
+class lock(EmbeddedDocument):
+    is_active = BooleanField(default = False)
+    key_tag = StringField() #Starts with "SWITCH_" if it's a switch. 
+    hack_difficulty = IntField(default = 100)
+    inspection_description = StringField()
+
+class trap(EmbeddedDocument):
+    is_active = BooleanField(default = False)
+    trap_obscurity = IntField(default = 100)
+    trap_lethality = IntField(default = 10) #Damage taken when triggered
+    hack_difficulty = IntField(default = 100)
+    inspection_description = StringField()
+
+class path(EmbeddedDocument):
+    lock = EmbeddedDocumentField(lock)
+    trap = EmbeddedDocumentField(trap)
+    obscurity = IntField(default = 0)
+    inspection_description = StringField()
+
+class interactable(EmbeddedDocument):
+    lock = EmbeddedDocumentField(lock)
+    trap = EmbeddedDocumentField(trap)
+    obscurity = IntField(default = 0)
+    inspection_description = StringField()
+    key_tag = StringField()
+    is_dial = BooleanField(default = False) #When True, the dial can take more than 1 value
+    correct_dial_value = IntField(default = 1)
+    current_dial_value = IntField(default = 0)
+    location_of_lock = StringField()
+
 class Dungeon(Node):
     name = StringField()
-    treasure = ListField(Item)
+    d_name = StringField()
+    treasure = ListField(ReferenceField(Item), default = [])
     gold_loot = IntField()
+    north = EmbeddedDocumentField(path)
+    east = EmbeddedDocumentField(path)
+    south = EmbeddedDocumentField(path)
+    west = EmbeddedDocumentField(path)
+    interactables = EmbeddedDocumentListField(interactable)
 
-class Room(Dungeon):
-    lock = StringField(default = "NONE")
+class DungeonEntry(Document):
+    name = StringField()
+    max_monsters = IntField(default = 1)
+    current_monsters = IntField(default = 0)
+    monsters_list = ListField(StringField(), default = [])
+    average_number_of_rooms = IntField(default = 1)
+    id_prefix = StringField()
 
 class PackageNames(Document):
     name = StringField()
