@@ -70,7 +70,6 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
     @commands.command(name='import')
     async def import_packages(self, ctx, *args):
          user = str(ctx.author.id)
-         guild = ctx.guild
          if user in moderators_list:
             if len(args) != 1 :
                 return await ctx.send("You must specify which pack you wish to import")
@@ -83,12 +82,15 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
                 except:
                     basic_pack.install_pack()
                     
-                    
+    @commands.command(name='test_desc')
+    async def test_description(self, ctx, *args):
+         user = str(ctx.author.id)
+         if user in moderators_list:
+            await ctx.send(mg.generateDescription())             
     
     @commands.command(name='moderator_monster')
     async def mod_mon_summon(self,ctx, *args):
-        user = str(ctx.author.id)
-        guild = ctx.guild    
+        user = str(ctx.author.id) 
         if user in moderators_list:
             if len(args) != 1:
                 await ctx.send("Invalid number of arguments")

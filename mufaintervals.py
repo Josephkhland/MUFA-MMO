@@ -19,8 +19,8 @@ def solve_conditions(hourly= False, tworly = False):
                     if con.duration == -1:
                         continue
                     else :
-                        end_time = condition.date_added + timedelta(hours =condition.duration)
-                        if (datetime.now() >= end_time):
+                        end_time = con.date_added + datetime.timedelta(hours =con.duration)
+                        if (datetime.datetime.now() >= end_time):
                             to_remove.append(con)
                 for i in to_remove:
                     pCharac.conditions.remove(i)
@@ -42,8 +42,8 @@ def solve_conditions(hourly= False, tworly = False):
                 if con.duration == -1:
                     continue
                 else :
-                    end_time = condition.date_added + timedelta(hours =condition.duration)
-                    if (datetime.now() >= end_time):
+                    end_time = con.date_added + datetime.timedelta(hours =con.duration)
+                    if (datetime.datetime.now() >= end_time):
                         to_remove.append(con)
             for i in to_remove:
                 pCharac.conditions.remove(i)

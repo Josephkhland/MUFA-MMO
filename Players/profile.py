@@ -375,7 +375,7 @@ class Profile(commands.Cog):
                     elif reaction.emoji == cancel_emoji:
                         await msg.add_reaction('💤')
                         loop = False
-                    msg.edit(embed = mdisplay(display_level_up_details(pCharac)))
+                    msg.edit(embed = mdisplay.display_level_up_details(pCharac))
                 except asyncio.TimeoutError:
                     await msg.add_reaction('💤')
                     loop = False
@@ -459,12 +459,12 @@ class Profile(commands.Cog):
         battler = db.Player.objects.get(battler_id = str(ctx.author.id))
         pCharac = battler.getCharacter()
         node = pCharac.getInstance()
-        if node.guild_id != battler_id.guild_id:
+        if node.guild_id != battler.guild_id:
             return await ctx.send("Your currently active character is not near your guild.")
         if len(args) !=1 :
             return await ctx.send("Invalid number of arguments")
         slot_index = int(args[0])
-        await ctx.send(storeItem(pCharac.inventory, slot_index, battler))
+        await ctx.send(mim.storeItem(pCharac.inventory, slot_index, battler))
         inventory = pCharac.inventory
         del inventory[slot_index]
         pCharac.inventory = inventory

@@ -241,7 +241,7 @@ def action_start(battler):
         if con.duration == -1:
             continue
         if con.duration == 0: 
-            to_remove.append(c.name)
+            to_remove.append(con.name)
         else:
            con.duration -= 1
     for cc in to_remove:

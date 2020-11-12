@@ -311,7 +311,6 @@ class Player(Battler):
         return
     
     def getCharacterByName(self, name):
-        counter = 0
         for ch in self.characters_list:
             if ch.name == name:
                 return ch
@@ -440,6 +439,7 @@ class lock(EmbeddedDocument):
     key_tag = StringField() #Starts with "SWITCH_" if it's a switch. 
     hack_difficulty = IntField(default = 100)
     inspection_description = StringField()
+    tag = StringField()
 
 class trap(EmbeddedDocument):
     is_active = BooleanField(default = False)
@@ -453,16 +453,18 @@ class path(EmbeddedDocument):
     trap = EmbeddedDocumentField(trap)
     obscurity = IntField(default = 0)
     inspection_description = StringField()
+    tag = StringField()
 
 class interactable(EmbeddedDocument):
     lock = EmbeddedDocumentField(lock)
     trap = EmbeddedDocumentField(trap)
     obscurity = IntField(default = 0)
-    inspection_description = StringField()
-    key_tag = StringField()
     is_dial = BooleanField(default = False) #When True, the dial can take more than 1 value
     correct_dial_value = IntField(default = 1)
     current_dial_value = IntField(default = 0)
+    inspection_description = StringField()
+    key_tag = StringField()
+    tag = StringField()
     location_of_lock = StringField()
 
 class Dungeon(Node):
@@ -483,6 +485,13 @@ class DungeonEntry(Document):
     monsters_list = ListField(StringField(), default = [])
     average_number_of_rooms = IntField(default = 1)
     id_prefix = StringField()
+    descriptor_tags = ListField(StringField(),default =[])
+    deadends_tags = ListField(StringField(), default = [])
+    pathways_tags = ListField(StringField(), default =[])
 
 class PackageNames(Document):
     name = StringField()
+
+class Tags(Document):
+    name = StringField()
+    collection = ListField(StringField(), default =[])

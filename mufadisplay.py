@@ -118,7 +118,7 @@ def display_battle_members(list_of_members, node_id):
             this_value += "`"+con.name+"`, "
         this_value = this_value[:-2]
         for buf in enemy_char.buffs:
-            this_value += "`"+con.name+"`, "
+            this_value += "`"+buf.name+"`, "
         buff_value = buff_value[:-2]
         name_plugin = " "
         if disabling_conditions[2]:

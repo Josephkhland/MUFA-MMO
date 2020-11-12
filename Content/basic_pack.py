@@ -234,23 +234,38 @@ def basic_monsters():
     print("Basic Monsters Pack Installed Successfully")
 
 def basic_dungeon():
-    db.DungeonEntry(name = "Goblin Lair",
-                    max_monsters = 10,
-                    average_number_of_rooms = 15,
-                    monsters_list = ["Goblin Rook", "Goblin Scout", "Goblin Brute"]).save()
-                    
-    db.Dungeon(node_id = "BDGL0000",
-               entrance_message = "You are standing at the entrance of a dark cavern, it's overall pretty dark, making it hard to see. The wind blowing from the north, carries a stinking smell of goblin waste.",
-               name = "Goblin Lair - Entrance",
-               d_name = "Goblin Lair",
-               gold_loot = 50,
-               north_exit = "BDGL0100").save()
-    db.Dungeon(node_id = "BDGL0100",
-            name = "Goblin Lair - Room 1",
-            d_name = "Goblin Lair",
-            entrance_message = "It's so dark that it's hard to see",
-            gold_loot = 50,
-            south_exit = "BDGL0000").save()
+    db.Tags(
+    name = "Decorators",
+    collection = ["barrel", "cupboard", "waste", "pot", "corpses", "torches",
+    "bones","pit","mold","graffiti","cage","kennels","debris"]
+    ).save()
+  
+    db.Tags(
+    name = "Deadends",
+    collection = ["wall", "bottomless pit", "boulder" , "wooden obstacle",
+    "barricade"]
+    ).save()
+
+    db.Tags(
+    name = "Pathways",
+    collection = ["tunnel","slope","stairs","stream","waterfall","bridge",
+    "shipwreck", "door", "doorway", "curtain", "corridor"]
+    ).save()
+
+    db.Tags(
+    name = "Symbols",
+    collection = ["circle", "square", "triangle", "stickman", "eye", "sun",
+    "moon", "hexagon", "skull", "oval", "leaf", "bear", "wolf", "eagle", 
+    "fish", "sword", "bow", "flame", "star" , "deer", "arrow", "spiral",
+    "0", "1", "2","3","4","5","6","7","8","9"]
+    ).save()
+
+    db.DungeonEntry(
+    name = "Goblin Lair",
+    max_monsters = 10,
+    average_number_of_rooms = 15,
+    monsters_list = ["Goblin Rook", "Goblin Scout", "Goblin Brute"]
+    ).save()
     
     print("Basic Dungeon Pack Installed Successfully")
  

@@ -1,6 +1,8 @@
 import mufa_constants as mc
 import mufadisplay as mdisplay
 import mufadb as db
+import discord
+import math
 
 def copyItem(item_list, id_of_item_to_grab, character_to_give):
     character_to_give.inventory.append(db.Item.objects.get(item_id =item_list[id_of_item_to_grab].item_id))
@@ -24,8 +26,8 @@ def pickupItem(node_with_treasure, id_of_item_to_grab, battler):
     item_list = node_with_treasure.treasure
     if len(item_list) < id_of_item_to_grab:
         return "ERROR: Index out of bounds. This Instance doesn't have such an item in its treasure"
-    if len(character_to_give.inventory) >= bCharacter.strength*6 :
-        return character_to_give.name +" has a full inventory("+str(len(bCharacter.inventory))+"/"+str(bCharacter.strength*6)+"."
+    if len(character_to_give.inventory) >= character_to_give.strength*6 :
+        return character_to_give.name +" has a full inventory("+str(len(character_to_give.inventory))+"/"+str(character_to_give.strength*6)+"."
     character_to_give = copyItem(item_list, id_of_item_to_grab, character_to_give)
     name_of_item = item_list[id_of_item_to_grab].name
     del item_list[id_of_item_to_grab]
@@ -70,11 +72,11 @@ def sellItem(seller, id_of_item_to_sell):
     sCharacter = seller.getCharacter()
     inventory = sCharacter.inventory
     try: 
-        money = math.ceil(inventory[id_of_item_to_give].value / 2)
+        money = math.ceil(inventory[id_of_item_to_sell].value / 2)
     except:
         return "ERROR: You don't have an item in that inventory slot"
-    name_of_item = inventory[id_of_item_to_give].name 
-    del inventory[id_of_item_to_give]
+    name_of_item = inventory[id_of_item_to_sell].name 
+    del inventory[id_of_item_to_sell]
     sCharacter.inventory = turnListToDBREF(inventory)
     sCharacter.money_carried += money
     sCharacter.instance_stack = turnListToDBREF(sCharacter.instance_stack)
@@ -290,7 +292,7 @@ def unequipItem(player, slot_id):
     if slot_id <=2:
         item_to_remove = sCharacter.armor_equiped[slot_id]
         if item_to_remove.name != "null_object":
-            inventory.append(item_to_compare)
+            inventory.append(item_to_remove)
         else:
             return "You already have no item equipped at the selected slot."
         sCharacter.armor_equiped[slot_id] = item_to_equip.to_dbref()
@@ -298,10 +300,10 @@ def unequipItem(player, slot_id):
         slot_id -= 3
         item_to_remove = sCharacter.weapons_equiped[slot_id]
         if item_to_remove.name != "null_object":
-            inventory.append(item_id)
+            inventory.append(item_to_remove)
         else:
             return "You already have no item equipped at the selected slot."
-        sCharacter.weapons_equiped[slot_for_spellbook] = item_to_equip.to_dbref()
+        sCharacter.weapons_equiped[slot_id] = item_to_equip.to_dbref()
     sCharacter = checkArmorSet(sCharacter)
     sCharacter.inventory = turnListToDBREF(inventory)
     sCharacter.instance_stack = turnListToDBREF(sCharacter.instance_stack)

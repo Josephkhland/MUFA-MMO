@@ -1,4 +1,5 @@
 import random
+import re
 import mufadb as db 
 import mufa_world as mw
 
@@ -50,7 +51,7 @@ def dungeon_monsters_generate():
                 battler_added = spawn_monster_in_dungeon(noderef, dungeon.monsters_list[monster_selection])
                 node_val.members.append(battler_added)
                 node_val.save()
-            dungeon.current_monsters = max_monsters
+            dungeon.current_monsters = dungeon.max_monsters
             dungeon.save()
 
 
@@ -61,8 +62,28 @@ def gen_dungeon_id(dungeon_tag, x,y):
         x_value = "N" + x_value[1:]
     if y < 0:
         y_value = "N" + y_value[1:]
-    final = dungeon_tag + x_value + y_value
+    final = dungeon_tag +":X"+ x_value +"Y"+ y_value + "E"
     return final
+
+
+
+def getRoomCoords(room_id):
+
+    def denegafy(match):
+        value : int 
+        if match[0] == "N":
+            value = - int(match[1:2])
+        else:
+            value = int(match)
+        return value
+
+    regexFilter_x = r"(?!\:[X])\w\w\w(?=[E])"
+    regexFilter_y = r"(?!\:[Y])\w\w\w(?=[E])"
+    x_match = re.search(regexFilter_x, room_id).string
+    y_match = re.search(regexFilter_y, room_id).string
+    x = denegafy(x_match)
+    y = denegafy(y_match)
+    return x, y
 
 def generate_trap(level):
     trap_lethality_calc = 0
@@ -81,7 +102,7 @@ def generate_trap(level):
 
 def generate_lock(key_id):
     active = True
-    if key_tag == "NONE":
+    if key_id == "NONE":
         active = False   
     lock_obj = db.lock( is_active = active,
                         key_tag = key_id,
@@ -89,8 +110,9 @@ def generate_lock(key_id):
                         inspection_description = "There is a lock here")
     return lock_obj
     
-def generate_interactable(level, node_id, index):
+def generate_interactable(dungeon_entry, level, node_id, index):
     key_tag = node_id + "::" + str(index)
+    tag = random.choice(dungeon_entry.descriptor_tags)
     ## Come up with what to do about dials and generating the puzzle part
     inter_obj = db.interactable( lock = generate_lock("NONE"),
                                  trap = generate_trap(level),
@@ -112,8 +134,6 @@ def generate_dungeon(dungeon_name):
     rooms_to_create = max(rooms_to_create, 1)
     keys_in_place = []
     blank_paths = 4
-    local_x  =0
-    local_y  =0
     generate_room(d_entry, 0,rooms_to_create,blank_paths,0,0, keys_in_place)   
 
 
@@ -140,7 +160,7 @@ def generate_room(d_entry, entering_from, rooms_to_create, blank_paths, x, y, lo
         paths_chosen.append(all_paths.pop(index))
     n_id = gen_dungeon_id(d_entry.id_prefix, x, y)
     room_obj = db.Dungeon( name = "Room ",
-                           d_name = dungeon_name,
+                           d_name = d_entry.name,
                            node_id = n_id).save()
                                
     for r_direction in paths_chosen:
@@ -190,4 +210,78 @@ def generate_room(d_entry, entering_from, rooms_to_create, blank_paths, x, y, lo
 def flood_with_monsters():
     dungeon_monsters_generate()
     global_monsters_generate()
+
+class DescriptionGen:
+    def __init__(self):
+        self.fluff = ["sketchily-drawn", "rough", "minimalistic", "simple", "carefully-drawn, hastily-drawn, elaborate"]
+        self.verbs = ["painted","engraved", "carved", "drawn", "glued", "scorched","stiched"] 
+        self.position = ["floor, adjacent to the", "wall, adjacent to the", "surface of the"]
+        self.position_prefix = ["on the", "upon the", "over the", "over a segment of the"]
+        self.adverb = ["hastily", "carefully", "roughly", "poorly", "artistically", "elaborately"]
+        self.afterv = ["presented","expressed","delivered","demonstrated", "pictured", "illustrated"]
+        pass
+
+    def starts_with_vowel(self,s):
+        try:
+            vowels = ['a','e','i','o','u','y']
+            return s[0] in vowels
+        except:
+            return None
+
+    def insert_a_article(self,s):
+        if self.starts_with_vowel(s):
+            return "an "+ s
+
+    def express_shape(self,s):
+        synonyms = ["shape", "symbol"]
+        shape_syn = random.choice(synonyms)
+        return shape_syn+ " of " + self.insert_a_article(s)
+
+    def enrich_shape(self,s):
+        adj = random.choice(self.fluff)
+        return adj + " " + self.express_shape(s)
+
+    def diverse_action(self):
+        adv = random.choice(self.adverb)
+        v = random.choice(self.verbs)
+        return adv + " " + v
+
+    def express_position(self, t, suffix = ", "):
+        p = random.choice(self.position)
+        pre = random.choice(self.position_prefix)
+        return pre + " " + p + " " + t + suffix
     
+    def interactable_description(self,tag,symbol):
+        result : str
+        b,c = " "
+        choice = random.randint(0,5)
+
+        if choice == 0:
+            #String there is a + self.enrich_shape(s)
+            result = random.choice(self.verbs) + b + self.express_position(tag)+"there is the " + self.enrich_shape(symbol) + "."
+        elif choice ==1: 
+            #String pre_enriched + ", there is the " + self.express_shape(s)
+            result = self.diverse_action() + b + self.express_position(tag)+ "there is the " + self.express_shape(symbol) + "."
+        elif choice ==2:
+            #String pre_enriched + ", the " + self.express_shape(s) + " is expressed."
+            result = self.diverse_action() + b + self.express_position(tag)+ "the " + self.express_shape(symbol) + " is" +random.choice(self.afterv) +"."
+        elif choice ==3:
+            #The surface of the {}, is occupied by the + self.enrich_shape(s)
+            result = "The" + self.express_position(tag) + "is occupied by the " + self.enrich_shape(symbol) +"."
+        elif choice ==4:
+            #On the wall adjacent to the {}, the {symbol} is {enrich_action} painted
+            result = self.express_position(tag)+"the " +self.express_shape(symbol) + " is " + self.diverse_action() +"."
+        elif choice ==5:
+            #The symbol of a sun is {diverse action} over the surface of the {}.
+            result = "The "+ self.enrich_shape(symbol) + " is " + self.diverse_action() + b + self.express_position(tag, ".") 
+        return result
+
+
+def generateDescription():
+    all_symbols = db.Tags.objects.get(name = "Symbols").collection
+    all_decorators = db.Tags.objects.get(name = "Decorators").collection
+    symbol = random.choice(all_symbols)
+    decorator = random.choice(all_decorators)
+    result = DescriptionGen().interactable_description(decorator,symbol)
+    print(result)
+    return result
