@@ -1,7 +1,8 @@
 import mufadb as db
 import mufa_constants as mconst
 import mufa_world
-import mufagenerator as mg 
+import mufagenerator as mg
+import descriptions as mgd 
 import Content.basic_pack as basic_pack
 import discord
 from discord.ext import commands
@@ -86,7 +87,52 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
     async def test_description(self, ctx, *args):
          user = str(ctx.author.id)
          if user in moderators_list:
-            await ctx.send(mg.generateDescription())             
+            if len(args) != 1 :
+                return await ctx.send(mgd.generateDescription())
+            try: 
+                value = int(args[0])
+            except:
+                return await ctx.send("Argument must be an integer")
+            all_res = mgd.generateDescriptionTest(value)
+            final = "```\n"
+            for rest in all_res:
+                final += rest +"\n"
+            final += "```"
+            return await ctx.send(final)
+
+    @commands.command(name='test_puzzle')
+    async def test_puzzle(self, ctx, *args):
+         user = str(ctx.author.id)
+         if user in moderators_list:
+            if len(args) != 1 :
+                return await ctx.send(mg.test_random_puzzle(5))
+            try: 
+                value = int(args[0])
+            except:
+                return await ctx.send("Argument must be an integer")
+            final = mg.test_random_puzzle(value)
+            return await ctx.send(final)
+
+    @commands.command(name='test_gen')
+    async def test_dungeon_gen(self, ctx, *args):
+         user = str(ctx.author.id)
+         if user in moderators_list:
+            if len(args) != 1 :
+                return await ctx.send(mg.test_map_traversal("Goblin Lair"))
+            value = args[0]
+            final = mg.test_map_traversal(value)
+            return await ctx.send(final)
+
+    @commands.command(name='gen_dun_map')
+    async def try_dungeon_gen(self, ctx, *args):
+         user = str(ctx.author.id)
+         if user in moderators_list:
+            if len(args) != 1 :
+                return await ctx.send(mg.gen_map("Goblin Lair"))
+            value = args[0]
+            final = mg.gen_map(value)
+            return await ctx.send(final)
+                         
     
     @commands.command(name='moderator_monster')
     async def mod_mon_summon(self,ctx, *args):

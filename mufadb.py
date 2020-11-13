@@ -463,7 +463,7 @@ class interactable(EmbeddedDocument):
     correct_dial_value = IntField(default = 1)
     current_dial_value = IntField(default = 0)
     inspection_description = StringField()
-    key_tag = StringField()
+    this_location_string = StringField()
     tag = StringField()
     location_of_lock = StringField()
 

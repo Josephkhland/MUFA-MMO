@@ -264,8 +264,17 @@ def basic_dungeon():
     name = "Goblin Lair",
     max_monsters = 10,
     average_number_of_rooms = 15,
-    monsters_list = ["Goblin Rook", "Goblin Scout", "Goblin Brute"]
+    monsters_list = ["Goblin Rook", "Goblin Scout", "Goblin Brute"],
+    id_prefix = "GL",
+    descriptor_tags =["barrel", "cupboard", "waste", "pot", "corpses", "torches",
+    "bones","pit","mold","graffiti","cage","kennels","debris"],
+    deadends_tags = ["wall", "bottomless pit", "boulder" , "wooden obstacle",
+    "barricade"],
+    pathways_tags = ["tunnel","slope","stairs","stream","waterfall","bridge",
+    "shipwreck", "door", "doorway", "curtain", "corridor"]
     ).save()
+
+    
     
     print("Basic Dungeon Pack Installed Successfully")
  

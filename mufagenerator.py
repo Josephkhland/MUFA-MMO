@@ -159,39 +159,43 @@ def generate_room(d_entry, entering_from, rooms_to_create, blank_paths, x, y, lo
         index = random.randint(0,len(all_paths)-1)
         paths_chosen.append(all_paths.pop(index))
     n_id = gen_dungeon_id(d_entry.id_prefix, x, y)
-    room_obj = db.Dungeon( name = "Room ",
+    room_obj = db.Dungeon( name = "Room",
                            d_name = d_entry.name,
-                           node_id = n_id).save()
+                           node_id = n_id,
+                        ).save()
                                
     for r_direction in paths_chosen:
+        print("\n"+n_id)
+        print("Rooms to create: " + str(rooms_to_create))
+        print("Paths to Fill: " + str(blank_paths))
         if r_direction == 1:
             room_obj.north_exit = gen_dungeon_id(d_entry.id_prefix,x, y +1)
             if room_exists(d_entry.id_prefix, x, y+1):
                 blank_paths -= 3 
                 rooms_to_create += 1
             else:
-                rooms_to_create, blank_paths = generate_room(d_entry, r_direction, rooms_to_create, blank_paths, x, y+1, n_id)
+                rooms_to_create, blank_paths = generate_room(d_entry, r_direction, rooms_to_create, blank_paths, x, y+1, [], n_id)
         elif r_direction == 2:
             room_obj.east_exit = gen_dungeon_id(d_entry.id_prefix,x+1, y)
             if room_exists(d_entry.id_prefix, x+1, y):
                 blank_paths -= 3 
                 rooms_to_create += 1
             else:
-                rooms_to_create, blank_paths = generate_room(d_entry, r_direction, rooms_to_create, blank_paths, x+1, y, n_id)
+                rooms_to_create, blank_paths = generate_room(d_entry, r_direction, rooms_to_create, blank_paths, x+1, y, [], n_id)
         elif r_direction == 3:
             room_obj.south_exit = gen_dungeon_id(d_entry.id_prefix,x, y -1)
             if room_exists(d_entry.id_prefix, x, y-1):
                 blank_paths -= 3 
                 rooms_to_create += 1
             else:
-                rooms_to_create, blank_paths = generate_room(d_entry, r_direction, rooms_to_create, blank_paths, x, y-1, n_id)
+                rooms_to_create, blank_paths = generate_room(d_entry, r_direction, rooms_to_create, blank_paths, x, y-1,[], n_id)
         elif r_direction == 4:
             room_obj.west_exit = gen_dungeon_id(d_entry.id_prefix,x-1, y )
             if room_exists(d_entry.id_prefix, x, y-1):
                 blank_paths -= 3 
                 rooms_to_create += 1
             else:
-                rooms_to_create, blank_paths = generate_room(d_entry, r_direction, rooms_to_create, blank_paths, x-1, y, n_id)
+                rooms_to_create, blank_paths = generate_room(d_entry, r_direction, rooms_to_create, blank_paths, x-1, y, [], n_id)
     if entering_from == 1:
         #Entering from South ↑
         room_obj.south_exit = previous_room_id
@@ -205,83 +209,135 @@ def generate_room(d_entry, entering_from, rooms_to_create, blank_paths, x, y, lo
         #Entering from East: ←
         room_obj.east_exit = previous_room_id
     
+    room_obj.save()
     return rooms_to_create, blank_paths
 
 def flood_with_monsters():
     dungeon_monsters_generate()
     global_monsters_generate()
 
-class DescriptionGen:
-    def __init__(self):
-        self.fluff = ["sketchily-drawn", "rough", "minimalistic", "simple", "carefully-drawn, hastily-drawn, elaborate"]
-        self.verbs = ["painted","engraved", "carved", "drawn", "glued", "scorched","stiched"] 
-        self.position = ["floor, adjacent to the", "wall, adjacent to the", "surface of the"]
-        self.position_prefix = ["on the", "upon the", "over the", "over a segment of the"]
-        self.adverb = ["hastily", "carefully", "roughly", "poorly", "artistically", "elaborately"]
-        self.afterv = ["presented","expressed","delivered","demonstrated", "pictured", "illustrated"]
-        pass
 
-    def starts_with_vowel(self,s):
-        try:
-            vowels = ['a','e','i','o','u','y']
-            return s[0] in vowels
-        except:
-            return None
-
-    def insert_a_article(self,s):
-        if self.starts_with_vowel(s):
-            return "an "+ s
-
-    def express_shape(self,s):
-        synonyms = ["shape", "symbol"]
-        shape_syn = random.choice(synonyms)
-        return shape_syn+ " of " + self.insert_a_article(s)
-
-    def enrich_shape(self,s):
-        adj = random.choice(self.fluff)
-        return adj + " " + self.express_shape(s)
-
-    def diverse_action(self):
-        adv = random.choice(self.adverb)
-        v = random.choice(self.verbs)
-        return adv + " " + v
-
-    def express_position(self, t, suffix = ", "):
-        p = random.choice(self.position)
-        pre = random.choice(self.position_prefix)
-        return pre + " " + p + " " + t + suffix
+class Puzzle:
+    def __init__(self, number_of_keys=1):
+        self.array = list(range(0,number_of_keys))
     
-    def interactable_description(self,tag,symbol):
-        result : str
-        b,c = " "
-        choice = random.randint(0,5)
+    def find_legal(self, value, arr):
+        outcome = set()
+        for slot in arr:
+            if type(slot) is tuple:
+                if slot[1] == value:
+                    continue
+                else: 
+                    outcome = outcome.union(self.find_legal(value, slot[0]))
+            else:
+                if slot == value:
+                    continue
+                outcome.add(slot)
+        return outcome
 
-        if choice == 0:
-            #String there is a + self.enrich_shape(s)
-            result = random.choice(self.verbs) + b + self.express_position(tag)+"there is the " + self.enrich_shape(symbol) + "."
-        elif choice ==1: 
-            #String pre_enriched + ", there is the " + self.express_shape(s)
-            result = self.diverse_action() + b + self.express_position(tag)+ "there is the " + self.express_shape(symbol) + "."
-        elif choice ==2:
-            #String pre_enriched + ", the " + self.express_shape(s) + " is expressed."
-            result = self.diverse_action() + b + self.express_position(tag)+ "the " + self.express_shape(symbol) + " is" +random.choice(self.afterv) +"."
-        elif choice ==3:
-            #The surface of the {}, is occupied by the + self.enrich_shape(s)
-            result = "The" + self.express_position(tag) + "is occupied by the " + self.enrich_shape(symbol) +"."
-        elif choice ==4:
-            #On the wall adjacent to the {}, the {symbol} is {enrich_action} painted
-            result = self.express_position(tag)+"the " +self.express_shape(symbol) + " is " + self.diverse_action() +"."
-        elif choice ==5:
-            #The symbol of a sun is {diverse action} over the surface of the {}.
-            result = "The "+ self.enrich_shape(symbol) + " is " + self.diverse_action() + b + self.express_position(tag, ".") 
-        return result
+    def get_deepest(self, target):
+        if type(target) is tuple:
+            return self.get_deepest(target[0])
+        elif type(target) is list:
+            return target[0]
+        else:
+            return target
 
+    def set_deepest(self, target, key_to_save):
+        if type(target) is tuple:
+            return ([self.set_deepest(target[0], key_to_save)],target[1])
+        elif type(target) is list:
+            return ([target[0]], key_to_save)
+        else:
+            return ([target] , key_to_save)
 
-def generateDescription():
-    all_symbols = db.Tags.objects.get(name = "Symbols").collection
-    all_decorators = db.Tags.objects.get(name = "Decorators").collection
-    symbol = random.choice(all_symbols)
-    decorator = random.choice(all_decorators)
-    result = DescriptionGen().interactable_description(decorator,symbol)
-    print(result)
-    return result
+    def key_gen(self, value):
+        all_legal = self.find_legal(value, self.array)
+        return random.choice(tuple(all_legal))
+
+    def create_lock(self, arr, index, key):
+        value = self.set_deepest(arr[index], key)
+        return value
+
+    def randomize(self):
+        locks = len(self.array)
+        new_array = self.array
+        for i in range(locks):
+            selection = random.randint(0,locks-1)
+            key = self.key_gen(self.array[selection])
+            new_array[selection] = self.create_lock(new_array, selection, key)
+        return new_array
+    
+def test_random_puzzle(size):
+    p = Puzzle(size).randomize()
+    print (p)
+    return p
+
+def do_nothing(arg):
+    if isinstance(arg, db.Dungeon):
+        print("\n"+arg.node_id)
+        north =arg.north_exit
+        if arg.north_exit == None:
+            north = "None"
+        print("north_exit: " + north)
+
+        east =arg.east_exit
+        if arg.east_exit == None:
+            east = "None"
+        print("east_exit: " + east)
+
+        south =arg.south_exit
+        if arg.south_exit == None:
+            south = "None"
+        print("south_exit: " + south)
+
+        west =arg.west_exit
+        if arg.west_exit == None:
+            west = "None"
+        print("west_exit: " + west)
+    else:
+        print("function argument has no attribute name") 
+
+class MapTraversal:
+    def __init__(self , name):
+        self.all_rooms = db.Dungeon.objects(d_name = name)
+        self.rooms_visited = []
+        self.entrance = random.choice(self.all_rooms)
+    
+    def getNode(self, room_id):
+        try: 
+            return self.all_rooms.get(node_id = room_id)
+        except:
+            return "DoesNotExist"
+
+    
+
+    def traverse(self, room , func = do_nothing):
+        if room == "DoesNotExist":
+            print("DoesNotExist")
+            return 
+        if room.node_id in self.rooms_visited:
+            return
+        print(room) 
+        self.rooms_visited.append(room.node_id)
+        func(room)
+        if room.north_exit != None and room.north_exit != "NONE":
+            self.traverse(self.getNode(room.north_exit))
+        if room.east_exit != None and room.east_exit != "NONE":
+            self.traverse(self.getNode(room.east_exit))
+        if room.south_exit != None and room.south_exit != "NONE":
+            self.traverse(self.getNode(room.south_exit)) 
+        if room.west_exit != None and room.west_exit != "NONE":
+            self.traverse(self.getNode(room.west_exit))
+    
+    def launch(self):
+        self.rooms_visited = []
+        self.traverse(self.entrance)
+
+def gen_map(name):
+    generate_dungeon(name)
+    return "Done generation"
+
+def test_map_traversal(name):
+    MapTraversal(name).launch()
+    return "Done"
