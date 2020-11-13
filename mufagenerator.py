@@ -318,7 +318,6 @@ class MapTraversal:
             return 
         if room.node_id in self.rooms_visited:
             return
-        print(room) 
         self.rooms_visited.append(room.node_id)
         func(room)
         if room.north_exit != None and room.north_exit != "NONE":
