@@ -438,6 +438,7 @@ class lock(EmbeddedDocument):
     is_active = BooleanField(default = False)
     key_tag = StringField() #Starts with "SWITCH_" if it's a switch. 
     hack_difficulty = IntField(default = 100)
+    demolish_difficulty = IntField(default = 100) 
     inspection_description = StringField()
     tag = StringField()
 
@@ -476,7 +477,7 @@ class Dungeon(Node):
     east = EmbeddedDocumentField(path)
     south = EmbeddedDocumentField(path)
     west = EmbeddedDocumentField(path)
-    interactables = EmbeddedDocumentListField(interactable)
+    interactables = EmbeddedDocumentListField(interactable, default = [])
 
 class DungeonEntry(Document):
     name = StringField()
@@ -488,6 +489,7 @@ class DungeonEntry(Document):
     descriptor_tags = ListField(StringField(),default =[])
     deadends_tags = ListField(StringField(), default = [])
     pathways_tags = ListField(StringField(), default =[])
+    existing_instances = IntField(default = 0)
 
 class PackageNames(Document):
     name = StringField()
