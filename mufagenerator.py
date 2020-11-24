@@ -58,7 +58,7 @@ def dungeon_monsters_generate():
 
 
 def gen_dungeon_id(dungeon, x,y):
-    dungeon_tag = dungeon.id_prefix + str(existing_instances)
+    dungeon_tag = dungeon.id_prefix + str(dungeon.existing_instances)
     x_value = str(abs(x)).zfill(3)
     y_value = str(abs(y)).zfill(3)
     if x < 0:
@@ -302,11 +302,43 @@ def do_nothing(arg):
     else:
         print("function argument has no attribute name") 
 
-def print_room(room):
+def print_room(room, fake_variable):
+    print("\n")
+    print(room.name)
+    north =room.north_exit
+    if room.north_exit == None:
+        north = "None"
+    print("North Path: " + north)
+    print("#### Lock Key_Tag: "+ room.north.lock.key_tag)
+    east =room.east_exit
+    if room.east_exit == None:
+        east = "None"
+    print("East Path: " + east)
+    print("#### Lock Key_Tag: "+ room.east.lock.key_tag)
+    south =room.south_exit
+    if room.south_exit == None:
+        south = "None"
+    print("South Path: "+ south)
+    print("#### Lock Key_Tag: "+ room.south.lock.key_tag)
+    west =room.west_exit
+    if room.west_exit == None:
+        west = "None"
+    print("West Path: "+ west)
+    print("#### Lock Key_Tag: "+ room.west.lock.key_tag)
+    print("\n")
+    print("===Interactables===")
+    for i in room.interactables:
+        print("ID: "+ i.this_location_string)
+        print("Unlocks: " + i.location_of_lock)
+        print("#### Lock Key_Tag: "+ i.lock.key_tag)
+        print("#### Description: "+ i.inspection_description)
+        print("-------------------\n")
+    print("###########################")
     pass
 
 class MapTraversal:
     def __init__(self , name):
+        self.name = name 
         self.all_rooms = db.Dungeon.objects(d_name = name).no_dereference()
         self.number_of_rooms = len(self.all_rooms)
         temp = random.randint(1,5)
@@ -334,7 +366,7 @@ class MapTraversal:
             max_inter_to_try = random.randint(1,left_to_add)
             count_added = 0
             for times in range(max_inter_to_try):
-                chance = 100/rooms_left
+                chance = 100/max(1,rooms_left)
                 determiner = random.randint(0,100)
                 if chance > determiner:
                     #CREATE INTERACTABLE
@@ -357,7 +389,7 @@ class MapTraversal:
                     
                     #Tag Selection & Description
                     dungeon = db.DungeonEntry.objects.get(name = room.d_name)
-                    symbol_list = db.Tags.get(name = "Symbols")
+                    symbol_list = db.Tags.objects.get(name = "Symbols")
                     
                     tag_to_give = random.choice(dungeon.descriptor_tags)
                     symbol = random.choice(symbol_list.collection)
@@ -380,8 +412,8 @@ class MapTraversal:
                     attach_to_next.append(loc_string)
                     count_added += 1
                 else:
-                    continue
-        interactables_to_use_in_locks = interacts_from_previous + attach_to_next
+                    break
+        interactables_to_use_in_locks = interacts_from_previous[0] + attach_to_next
         self.rooms_dict[room.node_id] =interactables_to_use_in_locks 
 
     def analyze_string(self, s):
@@ -392,26 +424,41 @@ class MapTraversal:
         #value = 0 -> Get node_id
         #value = 1 -> Get index to use for node.interactables[index]
         #value = 2 -> Get symbol.
-        return temp[value]
+        if len(temp)> value:
+            return temp[value]
+        else:
+            return "ERROR"
+    
+    def set_interactable_location(self, s, location):
+        info = self.analyze_string(s)
+        room = db.Dungeon.objects.no_dereference().get(node_id = info[0])
+        room.interactables[int(info[1])].location_of_lock = location
+        room.save()
 
-    def createLock(self, room):
+    def createLock(self, room, string_loc):
         difficulties = [30,60,100,150,210]
         should_lock = random.randint(0,100) < 10
         hack_difficulty_tg = random.choice(difficulties)
         demolish_difficulty_tg = random.choice(difficulties)
+        location_to_store = room.node_id + "::" + string_loc
         if should_lock:
             available_interactables = self.rooms_dict[room.node_id]
-            pick = random.choice(available_interactables)
-            if pick == room.this_location_string or (pick in self.used_interactables):
+            if available_interactables == None or available_interactables == []: 
+                pick = None 
+            else:
+                pick = random.choice(available_interactables)
+            if pick == location_to_store or (pick in self.used_interactables) or pick == None:
                 key_tag_tg = "ITEM::"
                 tag_tg = "item"
                 insp_desc_to_give = "Some description."
             else: 
-                key_tag_tg = "SWITCH::"+ room.this_location_string
-                tag_tg = self.get_interactable(room.this_location_string,2)
+                key_tag_tg = "SWITCH::"+ location_to_store
+                tag_tg = self.get_interactable(location_to_store,2)
                 #insp_desc_to_give = descriptions.DescriptionGen().lock_description(tag_to_give,symbol)
                 insp_desc_to_give = "Clue: " + tag_tg
                 self.used_interactables.append(pick)
+                self.set_interactable_location(pick,location_to_store)
+
         else:
             key_tag_tg = "NONE" #There isn't actually a lock.
             tag_tg = "none"
@@ -443,9 +490,9 @@ class MapTraversal:
         )
         return trap_object
 
-    def createPath(self, room, deadend = False):
+    def createPath(self, room, deadend = False, string_loc = "default"):
         difficulties = [30,60,100,150,210]
-        path_lock = self.createLock(room)
+        path_lock = self.createLock(room, string_loc)
         path_trap = self.createTrap()
         see_difficulty_tg = random.choice(difficulties)
         dungeon = db.DungeonEntry.objects.get(name =room.d_name)
@@ -466,30 +513,38 @@ class MapTraversal:
         )
         return path_obj
 
-    def insert_locks(self,room):
+    def insert_locks(self,room,fake_variable):
+        count =0
         for interact in room.interactables:
-            interact.lock = self.createLock(room)
+            stringo = "inter::"+str(count)
+            interact.lock = self.createLock(room, stringo)
             interact.trap = self.createTrap()
+            count += 1
         
+        stringo = "north"
         if room.north_exit != None and room.north_exit != "NONE":
-            room.north = self.createPath(room)
+            room.north = self.createPath(room,False,stringo)
         else:
-            room.north = self.createPath(room,True)
+            room.north = self.createPath(room,True,stringo)
 
+        stringo = "east"
         if room.east_exit != None and room.east_exit != "NONE":
-            room.east = self.createPath(room)
+            room.east = self.createPath(room,False, stringo)
         else:
-            room.east = self.createPath(room,True)
+            room.east = self.createPath(room,True, stringo)
         
+        stringo = "south"
         if room.south_exit != None and room.south_exit != "NONE":
-            room.south = self.createPath(room)
+            room.south = self.createPath(room,False, stringo)
         else:
-            room.south = self.createPath(room,True)
+            room.south = self.createPath(room,True, stringo)
          
+        stringo = "west"
         if room.west_exit != None and room.west_exit != "NONE":
-            room.west = self.createPath(room)
+            room.west = self.createPath(room, False, stringo)
         else:
-            room.west = self.createPath(room,True)
+            room.west = self.createPath(room,True, stringo)
+        room.save()
     
 
     def traverse(self, room , func = do_nothing, *args):
@@ -528,25 +583,26 @@ class MapTraversal:
         if room.west_exit != None and room.west_exit != "NONE":
             rooms_to_visit.append(3)
         number_of_exits = len(rooms_to_visit)
+        new_arg = self.rooms_dict[room.node_id]
         for door_c in range(number_of_exits):
             select = random.randint(0,len(rooms_to_visit)-1)
             selected = rooms_to_visit.pop(select)
             if selected == 0:
-                self.random_traverse(self.getNode(room.north_exit), func)
+                self.random_traverse(self.getNode(room.north_exit), func, (new_arg))
             elif selected ==1:
-                self.random_traverse(self.getNode(room.east_exit), func)
+                self.random_traverse(self.getNode(room.east_exit), func, (new_arg))
             elif selected ==2: 
-                self.random_traverse(self.getNode(room.south_exit), func) 
+                self.random_traverse(self.getNode(room.south_exit), func, (new_arg)) 
             elif selected ==3:
-                self.random_traverse(self.getNode(room.west_exit), func)
+                self.random_traverse(self.getNode(room.west_exit), func, (new_arg))
 
     def re_init_for_traversal(self):
         self.rooms_visited = []
-        self.all_rooms = db.Dungeon.objects(d_name = name).no_dereference()
+        self.all_rooms = db.Dungeon.objects(d_name = self.name).no_dereference()
 
     def populate_dungeon(self):
         self.rooms_visited = []
-        self.random_traverse(self.entrance, self.insert_interactables, [])
+        self.random_traverse(self.entrance, self.insert_interactables, ([]))
         self.re_init_for_traversal()
         self.traverse(self.entrance, self.insert_locks)
 
@@ -560,6 +616,9 @@ class MapTraversal:
 
 def gen_map(name):
     generate_dungeon(name)
+    map_generator = MapTraversal(name)
+    map_generator.populate_dungeon()
+    map_generator.print_dungeon()
     return "Done generation"
 
 def test_map_traversal(name):
