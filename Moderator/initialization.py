@@ -114,14 +114,13 @@ class Initialization(commands.Cog , command_attrs=dict(hidden=True)):
             return await ctx.send(final)
 
     @commands.command(name='test_gen')
-    async def test_dungeon_gen(self, ctx, *args):
+    async def test_content_gen(self, ctx, *args):
          user = str(ctx.author.id)
          if user in moderators_list:
-            if len(args) != 1 :
-                return await ctx.send(mg.test_map_traversal("Goblin Lair"))
-            value = args[0]
-            final = mg.test_map_traversal(value)
-            return await ctx.send(final)
+            mg.generate_random_dungeons()
+            mg.dungeon_monsters_generate()
+            mg.global_monsters_generate()
+            return await ctx.send("SUCCESS")
 
     @commands.command(name='gen_dun_map')
     async def try_dungeon_gen(self, ctx, *args):

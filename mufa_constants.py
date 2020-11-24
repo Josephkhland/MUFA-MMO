@@ -5,3 +5,4 @@ world_size = {
 }
 
 currency = "Gold"
+MAX_MONSTERS = 10000

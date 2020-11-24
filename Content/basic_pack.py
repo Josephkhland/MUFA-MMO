@@ -195,7 +195,7 @@ def basic_monsters():
                           weapons_equiped = [weapon_slash,null_obj,null_obj,null_obj],
                           instance_stack = []
                           )
-    db.MonsterEntry(character_stats=n_char).save()
+    db.MonsterEntry(name = n_char.name, character_stats=n_char).save()
     
     helmet = db.Armor.objects.get(name = "Acrobat's Cap").to_dbref()
     chestpiece = db.Armor.objects.get(name = "Acrobat's Shirt").to_dbref()
@@ -212,7 +212,7 @@ def basic_monsters():
                           weapons_equiped = [weapon_slash,null_obj,null_obj,null_obj],
                           instance_stack = []
                           )
-    db.MonsterEntry(character_stats=n_char).save()
+    db.MonsterEntry(name = n_char.name, character_stats=n_char).save()
     
     helmet = db.Armor.objects.get(name = "Brute's Helmet").to_dbref()
     chestpiece = db.Armor.objects.get(name = "Brute's Armour").to_dbref()
@@ -229,7 +229,7 @@ def basic_monsters():
                           weapons_equiped = [weapon_slash,null_obj,null_obj,null_obj],
                           instance_stack = []
                           )
-    db.MonsterEntry(character_stats=n_char).save()
+    db.MonsterEntry(name = n_char.name, character_stats=n_char).save()
     
     print("Basic Monsters Pack Installed Successfully")
 

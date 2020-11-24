@@ -84,6 +84,43 @@ class Navigation(commands.Cog):
         finalize_message = prepare_message + "```"
         await ctx.send(finalize_message, embed = embed)
 
+    @commands.command(name='enter', aliases=['dungeon'])
+    async def enter_dungeon(self, ctx, *args):
+        """Use this command to enter a dungeon"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        temp_o = db.Battler.objects.get(battler_id = str(ctx.author.id))
+        pCharac = temp_o.getCharacter()
+        c_node = pCharac.getInstance()
+        embed = discord.Embed(
+            title = "Instance Information",
+            description = "**Description:** "+ str(c_node.entrance_message),
+            colour = discord.Colour.green()
+        )
+        if len(args) <1:
+            return
+        if args[0] in c_node.sub_nodes_ids:
+            embed = mw.node_go_deeper(args[0], str(ctx.author.id))
+        else:
+            await ctx.send("No such dungeon accessible from this point")
+            return
+        await ctx.send(embed = embed)
+
+    @commands.command(name='escape_dungeon', aliases=['leave_dungeon'])
+    async def escape_dungeon(self, ctx, *args):
+        """Use this command to abandon your progress in a dungeon"""
+        if not character.checkRegistration(str(ctx.author.id)):
+            return await ctx.send("You are not registered. Please register by using the command `!register`")
+        if not await character.playabilityCheck(ctx, str(ctx.author.id)):
+            return
+        temp_o = db.Battler.objects.get(battler_id = str(ctx.author.id))
+        pCharac = temp_o.getCharacter()
+        embed = mw.node_return_upper(str(ctx.author.id))
+        await ctx.send(embed = embed)
+
+
     @commands.command(name='info')
     async def show_instance_information(self, ctx, *args):
         """Shows the information of the instance where your active character is at"""

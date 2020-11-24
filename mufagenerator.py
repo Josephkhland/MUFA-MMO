@@ -4,15 +4,16 @@ import re
 import math
 import mufadb as db 
 import mufa_world as mw
+import mufa_constants as mc
 
 def monster(noderef):
     all_monsters_list = db.MonsterEntry.objects.no_dereference()
-    selection = random.randint(0,len(all_monsters_list)-1)
-    n_char = all_monsters_list[selection].character_stats
+    selection = random.choice(all_monsters_list)
+    n_char = selection.character_stats
     n_char.enterInstance(noderef)
     mon_id = mw.generateMonsterID()
     db.Monster(battler_id = mon_id, name = n_char.name , character_stats = n_char).save()
-    return db.Monster.objects.no_dereference.get(battler_id = mon_id).to_dbref()
+    return db.Monster.objects.no_dereference().get(battler_id = mon_id).to_dbref()
 
 def spawn_monster_in_dungeon(noderef, name_of_monster_to_spawn):
     monster = db.MonsterEntry.objects.no_dereference().get(name = name_of_monster_to_spawn)
@@ -20,24 +21,29 @@ def spawn_monster_in_dungeon(noderef, name_of_monster_to_spawn):
     n_char.enterInstance(noderef)
     mon_id = mw.generateMonsterID()
     db.Monster(battler_id = mon_id, name = n_char.name , character_stats = n_char).save()
-    return db.Monster.objects.no_dereference.get(battler_id = mon_id).to_dbref()
+    return db.Monster.objects.no_dereference().get(battler_id = mon_id).to_dbref()
 
 def global_monsters_generate():
+    print("DEBUG - 0")
     all_world_nodes = db.WorldNode.objects.no_dereference()
+    print("DEBUG - 1")
     world_size = len(all_world_nodes)
-    MAX_MONSTERS = 10000
+    MAX_MONSTERS = mc.MAX_MONSTERS
     this_size = len(db.Monster.objects.no_dereference())
-    monsters_to_add = max(MAX_MONSTERS - this_size,0)
+    monsters_to_add = min(max(MAX_MONSTERS - this_size,0),10*len(db.Player.objects.no_dereference()))
     for i in range(monsters_to_add):
-        location = random.randint(0,len(world_size)-1)
+        location = random.randint(0,world_size-1)
         node_val = all_world_nodes[location] 
         noderef = all_world_nodes[location].to_dbref()
         battler_added = monster(noderef)
         node_val.members.append(battler_added)
         node_val.save()
+    print(str(monsters_to_add) +" MONSTERS WERE GENERATED IN THE WORLD!")
+    return
         
 def dungeon_monsters_generate():
     all_dungeon_entries = db.DungeonEntry.objects
+    gens_counter = 0
     for dungeon in all_dungeon_entries:
         if dungeon.max_monsters <= dungeon.current_monsters:
             continue
@@ -55,6 +61,9 @@ def dungeon_monsters_generate():
                 node_val.save()
             dungeon.current_monsters = dungeon.max_monsters
             dungeon.save()
+            gens_counter += monsters_to_spawn
+    print(str(gens_counter) + " MONSTERS WERE GENERATED IN DUNGEONS")
+    return
 
 
 def gen_dungeon_id(dungeon, x,y):
@@ -139,6 +148,8 @@ def generate_dungeon(dungeon_name):
     blank_paths = 4
     generate_room(d_entry, 0,rooms_to_create,blank_paths,0,0, keys_in_place)
     d_entry.existing_instances += 1   
+    d_entry.save()
+    return d_entry.existing_instances - 1 
 
 
 def generate_room(d_entry, entering_from, rooms_to_create, blank_paths, x, y, lock_keys, previous_room_id="NONE"):
@@ -166,6 +177,7 @@ def generate_room(d_entry, entering_from, rooms_to_create, blank_paths, x, y, lo
     room_obj = db.Dungeon( name = "Room",
                            d_name = d_entry.name,
                            node_id = n_id,
+                           dungeon_instance = d_entry.existing_instances
                         ).save()
                                
     for r_direction in paths_chosen:
@@ -337,9 +349,9 @@ def print_room(room, fake_variable):
     pass
 
 class MapTraversal:
-    def __init__(self , name):
+    def __init__(self , name, d_id):
         self.name = name 
-        self.all_rooms = db.Dungeon.objects(d_name = name).no_dereference()
+        self.all_rooms = db.Dungeon.objects(d_name = name, dungeon_instance = d_id).no_dereference()
         self.number_of_rooms = len(self.all_rooms)
         temp = random.randint(1,5)
         variance = random.randint(-1,1)
@@ -614,13 +626,27 @@ class MapTraversal:
         self.rooms_visited = []
         self.traverse(self.entrance)
 
-def gen_map(name):
-    generate_dungeon(name)
-    map_generator = MapTraversal(name)
+def force_gen_map(name):
+    d_id = generate_dungeon(name)
+    map_generator = MapTraversal(name, d_id)
     map_generator.populate_dungeon()
-    map_generator.print_dungeon()
-    return "Done generation"
+    #map_generator.print_dungeon()
+    return map_generator.entrance
 
-def test_map_traversal(name):
-    MapTraversal(name).launch()
-    return "Done"
+def gen_map(name):
+    force_gen_map(name)
+    return "COMPLETED DUNGEON GENERATION"
+
+def generate_random_dungeons():
+    all_dungeons = db.DungeonEntry.objects.no_dereference()
+    all_world_nodes = db.WorldNode.objects.no_dereference()
+    gens_counter = 0
+    for dungeon in all_dungeons:
+        if dungeon.existing_instances < dungeon.max_instances_of_dungeon:
+            entrance = force_gen_map(dungeon.name)
+            node_to_place = random.choice(all_world_nodes)
+            node_to_place.sub_nodes_ids.append(entrance.node_id)
+            node_to_place.save()
+            gens_counter +=1 
+    print(str(gens_counter) + " DUNGEONS WERE GENERATED")
+    return 

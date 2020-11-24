@@ -3,8 +3,14 @@ import math
 import datetime
 import mufadb as db
 import mufabattle as mb
+import mufagenerator as mg
 
 StartTime=time.time()
+
+def hourly_content_generation():
+    mg.generate_random_dungeons()
+    mg.dungeon_monsters_generate()
+    mg.global_monsters_generate()
 
 def action() :
     print('action ! -> time : {:.1f}s'.format(time.time()-StartTime))
@@ -59,11 +65,15 @@ def solve_conditions(hourly= False, tworly = False):
             b.save()
     log_message = datetime.datetime.now().ctime() + " : Completed Interval Update"
     if hourly: 
+        hourly_content_generation()
         log_message += " | hourly == TRUE"
     if tworly: 
+        hourly_content_generation()
         log_message += " | tworly == TRUE"
     print(log_message)
-            
+
+
+
 class setInterval :
     def __init__(self,interval,action) :
         self.interval=interval

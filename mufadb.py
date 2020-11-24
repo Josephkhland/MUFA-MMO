@@ -352,6 +352,7 @@ class GhostBattler(Battler):
         return None
 
 class MonsterEntry(Document):
+    name = StringField()
     character_stats = EmbeddedDocumentField(character)
 
 
@@ -471,6 +472,7 @@ class interactable(EmbeddedDocument):
 class Dungeon(Node):
     name = StringField()
     d_name = StringField()
+    dungeon_instance = IntField()
     treasure = ListField(ReferenceField(Item), default = [])
     gold_loot = IntField()
     north = EmbeddedDocumentField(path)
@@ -490,6 +492,7 @@ class DungeonEntry(Document):
     deadends_tags = ListField(StringField(), default = [])
     pathways_tags = ListField(StringField(), default =[])
     existing_instances = IntField(default = 0)
+    max_instances_of_dungeon = IntField(default = 1)
 
 class PackageNames(Document):
     name = StringField()
