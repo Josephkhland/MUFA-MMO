@@ -475,6 +475,7 @@ class Dungeon(Node):
     dungeon_instance = IntField()
     treasure = ListField(ReferenceField(Item), default = [])
     gold_loot = IntField()
+    entrance_side = StringField()
     north = EmbeddedDocumentField(path)
     east = EmbeddedDocumentField(path)
     south = EmbeddedDocumentField(path)

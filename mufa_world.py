@@ -96,6 +96,9 @@ def node_information(node):
                 details = "ALLIANCES NOT IMPLEMENTED YET"
             embed.add_field(name = "Guild" , value = details, inline = False)
     
+    if any(mem.faction == 1 for mem in node.members):
+        embed.add_field(name= "Monsters", value = "There are monsters in this location. Use `!monsters` for more details.", inline= False)
+    
     #Creating Field for traveling directions
     exits_string = "->"
     if node.north_exit != None:

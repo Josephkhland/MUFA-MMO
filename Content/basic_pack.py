@@ -257,7 +257,7 @@ def basic_dungeon():
     collection = ["circle", "square", "triangle", "stickman", "eye", "sun",
     "moon", "hexagon", "skull", "oval", "leaf", "bear", "wolf", "eagle", 
     "fish", "sword", "bow", "flame", "star" , "deer", "arrow", "spiral",
-    "0", "1", "2","3","4","5","6","7","8","9"]
+    "zero", "one", "two","three","four","five","six","seven","eight","nine"]
     ).save()
 
     db.DungeonEntry(

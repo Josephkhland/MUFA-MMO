@@ -97,3 +97,36 @@ def generateDescriptionTest(value):
 
 def gen_interactable_description(decorator,symbol):
     return DescriptionGen().interactable_description(decorator,symbol)
+
+
+class ClueGen:
+    def __init__(self):
+        pass
+
+    def starts_with_vowel(self,s):
+        try:
+            vowels = ['a','e','i','o','u','y']
+            if s[0] in vowels:
+                return True
+            else:
+                return False 
+        except:
+            return None
+
+    def insert_a_article(self,s):
+        if self.starts_with_vowel(s):
+            return "an "+ s
+        else:
+            return "a " + s
+    
+    def dial_plus_symbol(self,dial_correct_value, symbol):
+        output = dial_correct_value + symbol
+        return output
+    
+    def tag_plus_symbol(self,tag, symbol):
+        output = tag + symbol
+        return output
+
+    def tag_plus_dial(self,tag,dial_correct_value):
+        output = tag + dial_correct_value
+        return output

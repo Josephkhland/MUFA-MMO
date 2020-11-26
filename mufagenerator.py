@@ -583,8 +583,9 @@ class MapTraversal:
             return 
         if room.node_id in self.rooms_visited:
             return
+        room.entrance_side = args[1]
         self.rooms_visited.append(room.node_id)
-        func(room, args)
+        func(room, args[0])
         rooms_to_visit =[]
         if room.north_exit != None and room.north_exit != "NONE":
             rooms_to_visit.append(0)
@@ -600,13 +601,13 @@ class MapTraversal:
             select = random.randint(0,len(rooms_to_visit)-1)
             selected = rooms_to_visit.pop(select)
             if selected == 0:
-                self.random_traverse(self.getNode(room.north_exit), func, (new_arg))
+                self.random_traverse(self.getNode(room.north_exit), func, (new_arg,"S"))
             elif selected ==1:
-                self.random_traverse(self.getNode(room.east_exit), func, (new_arg))
+                self.random_traverse(self.getNode(room.east_exit), func, (new_arg,"W"))
             elif selected ==2: 
-                self.random_traverse(self.getNode(room.south_exit), func, (new_arg)) 
+                self.random_traverse(self.getNode(room.south_exit), func, (new_arg,"N")) 
             elif selected ==3:
-                self.random_traverse(self.getNode(room.west_exit), func, (new_arg))
+                self.random_traverse(self.getNode(room.west_exit), func, (new_arg,"E"))
 
     def re_init_for_traversal(self):
         self.rooms_visited = []
@@ -614,7 +615,7 @@ class MapTraversal:
 
     def populate_dungeon(self):
         self.rooms_visited = []
-        self.random_traverse(self.entrance, self.insert_interactables, ([]))
+        self.random_traverse(self.entrance, self.insert_interactables, ([],"O"))
         self.re_init_for_traversal()
         self.traverse(self.entrance, self.insert_locks)
 
